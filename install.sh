@@ -1,5 +1,5 @@
 #!/bin/bash
-# Memora v4.0 Phase 5 - 安装脚本
+# Anima-AIOS v5.0 - 安装脚本
 
 set -e
 
@@ -8,7 +8,7 @@ AGENT_NAME="${1:-}"
 
 echo ""
 echo "=========================================="
-echo "  Memora v4.0 Phase 5 - 安装向导"
+echo "  Anima-AIOS v5.0 - 安装向导"
 echo "=========================================="
 echo ""
 
