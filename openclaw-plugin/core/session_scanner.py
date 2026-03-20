@@ -26,6 +26,11 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Tuple
 
+# 导入路径配置
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent / 'config'))
+from path_config import get_config
+
 
 class SessionScanner:
     """Session 记录扫描器"""
@@ -61,16 +66,28 @@ class SessionScanner:
         'rian': '日安',
     }
     
-    def __init__(self, openclaw_base: str = '/root/.openclaw'):
+    def __init__(self, openclaw_base: Optional[str] = None,
+                 facts_base: Optional[str] = None):
         """
         初始化扫描器
         
         Args:
-            openclaw_base: OpenClaw 基础目录
+            openclaw_base: OpenClaw 基础目录（可选，默认自动检测）
+            facts_base: facts 基础目录（可选，默认自动检测）
         """
-        self.openclaw_base = Path(openclaw_base)
+        config = get_config()
+        
+        if openclaw_base:
+            self.openclaw_base = Path(openclaw_base)
+        else:
+            self.openclaw_base = config.openclaw_base
+        
+        if facts_base:
+            self.facts_base = Path(facts_base)
+        else:
+            self.facts_base = config.facts_base
+        
         self.agents_dir = self.openclaw_base / 'agents'
-        self.facts_base = Path('/home/画像')
     
     def scan_all_agents(self) -> Dict[str, Dict]:
         """
