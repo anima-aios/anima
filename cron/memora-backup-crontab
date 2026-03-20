@@ -1,0 +1,19 @@
+# Memora v4.0 - 定期备份 Cron 配置
+# 用法：crontab memora-backup-crontab
+
+# 变量配置
+MEMORA_DIR="/root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system"
+BACKUP_LOG="/var/log/memora-backup.log"
+
+# 确保日志目录存在
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# ========== 每日备份（凌晨 03:00）==========
+# 每天凌晨 3 点自动备份所有 Memora 数据
+0 3 * * * cd $MEMORA_DIR && bash scripts/protect-data.sh >> $BACKUP_LOG 2>&1
+
+# ========== 每周清理（每周日 04:00）==========
+# 每周日凌晨 4 点清理 30 天前的备份
+0 4 * * 0 find /home/画像/.backup/facts -type d -mtime +30 -exec rm -rf {} \; 2>/dev/null || true
+0 4 * * 0 find /home/画像/.backup/profiles -type f -mtime +30 -exec rm -f {} \; 2>/dev/null || true

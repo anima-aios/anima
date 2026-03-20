@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# 配置文件（含敏感信息）
+config/config.json
+*.key
+*.secret
+
+# 日志
+*.log
+logs/
+
+# 备份
+*.bak
+*.backup
+*.tar.gz
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
