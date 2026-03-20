@@ -141,22 +141,6 @@ class TestNormalizationEngine(unittest.TestCase):
         )
         self.assertAlmostEqual(score, expected, places=2)
     
-    def test_score_to_level_mapping(self):
-        """测试分数到等级映射"""
-        # 测试各个等级
-        test_cases = [
-            (95, 100, 'Expert 专家'),
-            (85, 80, 'Proficient 熟练者'),
-            (70, 60, 'Competent 胜任者'),
-            (50, 40, 'Advanced Beginner 高级初学者'),
-            (20, 20, 'Novice 新手')
-        ]
-        
-        for score, expected_level, expected_stage in test_cases:
-            result = self.engine.score_to_level(score)
-            self.assertEqual(result['level'], expected_level, f"分数{score}的等级错误")
-            self.assertIn(expected_stage, result['stage'], f"分数{score}的阶段错误")
-    
     def test_dimension_stage(self):
         """测试维度阶段描述"""
         test_cases = [

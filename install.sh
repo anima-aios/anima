@@ -65,8 +65,8 @@ fi
 # 运行测试
 echo ""
 echo "🧪 运行测试套件..."
-cd "$SCRIPT_DIR"
-if bash tests/run_all_tests.sh > /tmp/memora_install_test.log 2>&1; then
+cd "$SCRIPT_DIR/openclaw-plugin"
+if python3 -m pytest tests/ -q > /tmp/memora_install_test.log 2>&1; then
     echo "   ✅ 所有测试通过"
 else
     echo "   ⚠️  部分测试失败，查看详细日志："
