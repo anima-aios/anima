@@ -27,7 +27,7 @@ Level 30→40: 2000 EXP
 
 Author: 枢衡
 Date: 2026-03-20
-Version: 4.0.2
+Version: 5.0.0
 """
 
 import json

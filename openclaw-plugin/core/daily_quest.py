@@ -14,7 +14,7 @@ Memora v4.0 - Daily Quest System
 
 Author: 枢衡
 Date: 2026-03-20
-Version: 4.0.0
+Version: 5.0.0
 """
 
 import json

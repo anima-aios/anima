@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Memora v4.0 - EXP Tracker Tests
+Anima-AIOS v5.0 - EXP Tracker Tests
 
 测试 EXP 追踪器的核心功能
 """

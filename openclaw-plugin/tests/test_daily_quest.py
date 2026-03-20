@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Memora v4.0 - Daily Quest System Tests
+Anima-AIOS v5.0 - Daily Quest System Tests
 
 测试每日任务系统
 """

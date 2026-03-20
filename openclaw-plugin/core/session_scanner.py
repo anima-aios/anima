@@ -18,7 +18,7 @@ EXP 计算规则：
 
 Author: 枢衡
 Date: 2026-03-20
-Version: 4.0.4
+Version: 5.0.0
 """
 
 import json

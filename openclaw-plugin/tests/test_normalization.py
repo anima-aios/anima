@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Memora v4.0 - Normalization Engine Tests
+Anima-AIOS v5.0 - Normalization Engine Tests
 
 测试归一化引擎的三种模式
 """
