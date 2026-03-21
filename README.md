@@ -388,7 +388,7 @@ MIT License
 ## 🔗 链接
 
 - **GitHub:** https://github.com/anima-aios/anima
-- **Gitee:** https://gitee.com/anima-aios/anima （待创建）
+- **Gitee:** https://gitee.com/anima-os/anima
 - **OpenClaw:** https://openclaw.ai
 - **完整文档:** [docs/README.md](docs/README.md)
 - **English README:** [README_en.md](README_en.md)
