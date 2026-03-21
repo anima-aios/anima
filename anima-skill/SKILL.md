@@ -82,6 +82,51 @@ _ensure_core_installed()
 
 ## 🛠️ 工具列表
 
+### 🏥 自检自修工具（Anima Doctor）
+
+#### `anima doctor`
+
+Anima-AIOS 自检自修工具，类似 Vega doctor。
+
+**功能：**
+- ✅ 检查 skill 是否安装
+- ✅ 检查 core 是否安装
+- ✅ 检查配置文件
+- ✅ 检查数据完整性
+- ✅ 检查依赖是否齐全
+- ✅ 检查目录权限
+- ✅ 自动修复常见问题
+
+**用法：**
+```bash
+# 自检
+anima doctor
+
+# 自修（交互式确认）
+anima doctor --fix
+
+# 自修（自动模式，无需确认）
+anima doctor --fix --auto
+```
+
+**检查项：**
+| 检查项 | 说明 |
+|--------|------|
+| skill_installed | 检查 Skill 文件是否完整 |
+| core_installed | 检查 Core 模块是否安装 |
+| config | 检查配置文件是否正确 |
+| data_integrity | 检查数据文件完整性 |
+| dependencies | 检查 Python 依赖 |
+| permissions | 检查目录权限 |
+
+**自动修复：**
+- ✅ 创建默认配置文件
+- ✅ 安装缺失的依赖
+- ✅ 修复目录权限
+- ✅ 重新安装 core 模块
+
+---
+
 ### 🧠 记忆工具（Memory v2）
 
 #### `memory_search_v2(query, type="all", maxResults=10)`
