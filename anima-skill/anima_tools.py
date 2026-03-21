@@ -276,20 +276,53 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
         try:
             sys.path.insert(0, str(ANIMA_HOME / "core"))
             from cognitive_profile import CognitiveProfileGenerator
-            generator = CognitiveProfileGenerator(agent_name)
-            profile = generator.generate_profile()
+            generator = CognitiveProfileGenerator(agent_name, facts_base="/home/画像")
+            profile = generator.generate_profile(auto_scan=False)
+            
+            # core 返回的维度名称映射
+            dimension_map = {
+                'understanding': 'internalization',  # 理解 → 内化
+                'application': 'application',
+                'creation': 'creation',
+                'metacognition': 'metacognition',
+                'collaboration': 'collaboration'
+            }
+            
+            # 转换维度格式（core 返回嵌套 dict，转换为简单分数）
+            dimensions = {}
+            for core_dim, skill_dim in dimension_map.items():
+                if core_dim in profile['dimensions']:
+                    dim_data = profile['dimensions'][core_dim]
+                    if isinstance(dim_data, dict):
+                        dimensions[skill_dim] = dim_data.get('score', 0)
+                    else:
+                        dimensions[skill_dim] = dim_data
+                else:
+                    dimensions[skill_dim] = 0
+            
+            # 获取等级和 EXP
+            level = profile.get('level', 1)
+            if isinstance(level, dict):
+                level = level.get('level', 1)
+            
+            # 获取 EXP（core 可能直接返回数字或嵌套 dict）
+            exp_data = _get_exp_simple(agent_name)
+            total_exp = exp_data['totalExp']
+            next_exp = _calculate_next_level_exp(level)
+            progress = int((total_exp / next_exp) * 100) if next_exp > 0 else 0
             
             return {
                 "agent": profile["agent"],
-                "level": profile["level"]["level"],
-                "exp": profile["exp"]["total"],
-                "nextLevelExp": profile["exp"]["next_level"],
-                "progress": f"{profile['exp']['progress']:.0f}%",
-                "dimensions": profile["dimensions"],
-                "radar": _generate_radar_ascii(profile["dimensions"])
+                "level": level,
+                "exp": total_exp,
+                "nextLevelExp": next_exp,
+                "progress": f"{progress}%",
+                "dimensions": dimensions,
+                "radar": _generate_radar_ascii(dimensions)
             }
         except Exception as e:
             # 降级：返回简化版本
+            # print(f"core 调用失败：{e}")
             pass
     
     # 降级方案
