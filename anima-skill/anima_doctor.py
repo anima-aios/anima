@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Anima Doctor - Anima-AIOS 自检自修工具
+Anima Doctor v2 - Anima-AIOS 自检自修工具（配置化版本）
 
 用法:
-    anima doctor              # 自检
-    anima doctor --fix        # 自修
-    anima doctor --fix --yes  # 自动修复（无需确认）
+    anima doctor              # 自检当前 Agent
+    anima doctor --agent 枢衡  # 自检指定 Agent
+    anima doctor --all         # 自检所有 Agent
+    anima doctor --fix         # 自修
+    anima doctor --fix --yes   # 自动修复（无需确认）
+
+设计原则:
+1. 无硬编码 - 所有路径从配置获取
+2. 支持多 Agent - 可以诊断任意 Agent
+3. 动态计算 - 不依赖静态文件
 """
 
 import os
@@ -15,40 +22,81 @@ import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, List, Optional
 
-# 项目路径
-WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
-ANIMA_HOME = Path(os.path.expanduser("~/.anima"))
-SKILL_DIR = WORKSPACE / "projects" / "anima" / "anima-skill"
-CORE_DIR = WORKSPACE / "projects" / "anima" / "anima-core"
+# 导入配置模块
+CORE_DIR = Path(__file__).parent.parent / 'anima-core' / 'core'
+sys.path.insert(0, str(CORE_DIR / 'config'))
+
+try:
+    from path_config import get_config
+except ImportError:
+    # Fallback: 使用默认配置
+    class DefaultConfig:
+        facts_base = Path('/home/画像')
+        anima_core_dir = CORE_DIR
+        backup_dir = Path('/home/画像/.backup')
+    
+    def get_config():
+        return DefaultConfig()
 
 
 class AnimaDoctor:
-    """Anima 自检自修工具"""
+    """Anima 自检自修工具（配置化版本）"""
     
-    def __init__(self):
-        """初始化医生"""
+    def __init__(self, agent_name: Optional[str] = None):
+        """
+        初始化医生
+        
+        Args:
+            agent_name: Agent 名称（可选，不传则使用当前 Agent）
+        """
+        self.config = get_config()
+        self.agent_name = agent_name or self._get_current_agent()
+        self.agent_dir = Path(self.config.facts_base) / self.agent_name
         self.checks = {}
         self.fixes = []
     
-    def diagnose(self, auto_fix=False, auto_confirm=False):
+    def _get_current_agent(self) -> str:
+        """获取当前 Agent 名称"""
+        # 优先级：
+        # 1. 环境变量 ANIMA_AGENT_NAME
+        # 2. OpenClaw 会话上下文（TODO）
+        # 3. 默认值 'Agent'
+        
+        agent_name = os.getenv('ANIMA_AGENT_NAME')
+        
+        if not agent_name:
+            # TODO: 从 OpenClaw 会话上下文获取
+            agent_name = 'Agent'
+        
+        return agent_name
+    
+    def diagnose(self, auto_fix=False, auto_confirm=False) -> bool:
         """
         自检 Anima 状态
         
         Args:
             auto_fix: 是否自动修复
             auto_confirm: 是否自动确认修复
+        
+        Returns:
+            是否有问题
         """
         print("=" * 60)
-        print("  🏥 Anima-AIOS 自检工具")
+        print(f"  🏥 Anima-AIOS 自检工具 - {self.agent_name}")
         print("=" * 60)
         print(f"  时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"  路径：{self.config.facts_base}")
         print("=" * 60)
         print()
         
         # 执行检查
         self._check_skill_installed()
         self._check_core_installed()
+        self._check_exp_data()
+        self._check_profile_dynamic()
+        self._check_memory_files()
         self._check_config()
         self._check_data_integrity()
         self._check_dependencies()
@@ -68,16 +116,37 @@ class AnimaDoctor:
                     self.recover()
             else:
                 print("\n💡 提示：运行以下命令修复")
-                print("   anima doctor --fix")
+                print(f"   anima doctor --agent {self.agent_name} --fix")
         
         return has_issues
     
+    def diagnose_all_agents(self) -> Dict[str, bool]:
+        """
+        诊断所有 Agent
+        
+        Returns:
+            每个 Agent 的诊断结果
+        """
+        sys.path.insert(0, str(CORE_DIR))
+        from team_scanner import TeamScanner
+        
+        scanner = TeamScanner()
+        agents = scanner.scan_active_agents()
+        
+        results = {}
+        for agent_name in agents:
+            doctor = AnimaDoctor(agent_name)
+            results[agent_name] = doctor.diagnose()
+        
+        return results
+    
     def _check_skill_installed(self):
         """检查 skill 是否安装"""
+        skill_dir = Path(__file__).parent
         skill_files = [
-            SKILL_DIR / "SKILL.md",
-            SKILL_DIR / "_meta.json",
-            SKILL_DIR / "anima_tools.py",
+            skill_dir / "SKILL.md",
+            skill_dir / "_meta.json",
+            skill_dir / "anima_tools.py",
         ]
         
         missing = [f for f in skill_files if not f.exists()]
@@ -97,18 +166,18 @@ class AnimaDoctor:
     def _check_core_installed(self):
         """检查 core 是否安装"""
         core_files = [
-            ANIMA_HOME / "core" / "exp_tracker.py",
-            ANIMA_HOME / "core" / "cognitive_profile.py",
-            ANIMA_HOME / "core" / "dimension_calculator.py",
+            self.config.anima_core_dir / "exp_tracker.py",
+            self.config.anima_core_dir / "cognitive_profile.py",
+            self.config.anima_core_dir / "level_system.py",
         ]
         
         missing = [f for f in core_files if not f.exists()]
         
         if missing:
             self.checks['core_installed'] = {
-                'status': 'warning',
-                'message': f'Core 未完全安装，缺失文件：{len(missing)} 个',
-                'fix': '运行 post-install.sh 或重新安装'
+                'status': 'error',
+                'message': f'Core 未安装，缺失文件：{len(missing)} 个',
+                'fix': '运行 anima install-core 或手动安装'
             }
         else:
             self.checks['core_installed'] = {
@@ -116,114 +185,184 @@ class AnimaDoctor:
                 'message': 'Core 已安装'
             }
     
+    def _check_exp_data(self):
+        """检查 EXP 数据"""
+        exp_file = self.agent_dir / 'exp_history.jsonl'
+        
+        if not exp_file.exists():
+            self.checks['exp_data'] = {
+                'status': 'warning',
+                'message': 'EXP 历史文件不存在',
+                'fix': '运行 session_scanner 初始化'
+            }
+            return
+        
+        # 计算总 EXP
+        total_exp = 0
+        with open(exp_file) as f:
+            for line in f:
+                try:
+                    record = json.loads(line)
+                    total_exp += record.get('exp', 0)
+                except:
+                    continue
+        
+        # 验证等级计算
+        expected_level = max(1, int(total_exp ** 0.28))
+        
+        self.checks['exp_data'] = {
+            'status': 'ok',
+            'message': f'EXP 总计 {total_exp}，等级 Lv.{expected_level}',
+            'details': {'total_exp': total_exp, 'expected_level': expected_level}
+        }
+    
+    def _check_profile_dynamic(self):
+        """检查画像是否动态计算"""
+        try:
+            sys.path.insert(0, str(self.config.anima_core_dir))
+            from cognitive_profile import CognitiveProfileGenerator
+            from level_system import LevelSystem
+            
+            generator = CognitiveProfileGenerator(self.agent_name, str(self.config.facts_base))
+            profile = generator.generate_profile(auto_scan=False)
+            
+            level_sys = LevelSystem(self.agent_name, str(self.config.facts_base))
+            expected_level = level_sys.get_level_info()['level']
+            
+            if profile['level'] != expected_level:
+                self.checks['profile_dynamic'] = {
+                    'status': 'error',
+                    'message': f'画像等级 ({profile["level"]}) 与 EXP 等级 ({expected_level}) 不一致',
+                    'fix': '更新代码到最新版本'
+                }
+            else:
+                self.checks['profile_dynamic'] = {
+                    'status': 'ok',
+                    'message': f'画像动态计算正常 (Lv.{profile["level"]})'
+                }
+        except Exception as e:
+            self.checks['profile_dynamic'] = {
+                'status': 'error',
+                'message': f'画像生成失败：{e}',
+                'fix': '检查 core 安装'
+            }
+    
+    def _check_memory_files(self):
+        """检查记忆文件"""
+        memory_dir = self.agent_dir / 'memory'
+        facts_dir = self.agent_dir / 'facts'
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        today_file = memory_dir / f'{today}.md'
+        
+        if not self.agent_dir.exists():
+            self.checks['memory_files'] = {
+                'status': 'error',
+                'message': 'Agent 目录不存在',
+                'fix': '运行 init 命令初始化'
+            }
+        elif not memory_dir.exists():
+            self.checks['memory_files'] = {
+                'status': 'warning',
+                'message': '记忆目录不存在',
+                'fix': '开始写第一条记忆吧！'
+            }
+        elif not today_file.exists():
+            self.checks['memory_files'] = {
+                'status': 'warning',
+                'message': f'今日记忆文件不存在 ({today}.md)',
+                'fix': '开始写今天的记忆吧！'
+            }
+        else:
+            self.checks['memory_files'] = {
+                'status': 'ok',
+                'message': '记忆文件正常'
+            }
+    
     def _check_config(self):
         """检查配置文件"""
-        config_file = ANIMA_HOME / "anima_config.json"
+        config_file = self.agent_dir / 'anima_config.json'
         
         if not config_file.exists():
             self.checks['config'] = {
                 'status': 'warning',
-                'message': '配置文件不存在',
-                'fix': '创建默认配置文件'
+                'message': '配置文件不存在（可选）',
+                'fix': '运行 anima init-config 创建默认配置'
             }
         else:
             try:
-                with open(config_file, "r", encoding="utf-8") as f:
+                with open(config_file) as f:
                     config = json.load(f)
                 
-                # 检查必要配置
-                required_keys = ['exp', 'quest', 'profile']
-                missing_keys = [k for k in required_keys if k not in config]
-                
-                if missing_keys:
-                    self.checks['config'] = {
-                        'status': 'warning',
-                        'message': f'配置不完整，缺失：{missing_keys}',
-                        'fix': '补充配置项'
-                    }
-                else:
-                    self.checks['config'] = {
-                        'status': 'ok',
-                        'message': '配置正确'
-                    }
-            except json.JSONDecodeError:
+                self.checks['config'] = {
+                    'status': 'ok',
+                    'message': '配置文件正常'
+                }
+            except Exception as e:
                 self.checks['config'] = {
                     'status': 'error',
-                    'message': '配置文件格式错误',
-                    'fix': '修复或重建配置文件'
+                    'message': f'配置文件损坏：{e}',
+                    'fix': '删除并重新创建配置文件'
                 }
     
     def _check_data_integrity(self):
         """检查数据完整性"""
-        # 检查 EXP 历史
-        exp_file = ANIMA_HOME / "exp_history.jsonl"
-        if exp_file.exists():
-            try:
-                with open(exp_file, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                self.checks['data_integrity'] = {
-                    'status': 'ok',
-                    'message': f'数据完整 ({len(lines)} 条记录)'
-                }
-            except Exception as e:
-                self.checks['data_integrity'] = {
-                    'status': 'error',
-                    'message': f'数据文件损坏：{e}',
-                    'fix': '从备份恢复数据'
-                }
-        else:
+        issues = []
+        
+        # 检查 facts 目录
+        facts_dir = self.agent_dir / 'facts'
+        if facts_dir.exists():
+            episodic_count = len(list((facts_dir / 'episodic').glob('*.md'))) if (facts_dir / 'episodic').exists() else 0
+            semantic_count = len(list((facts_dir / 'semantic').glob('*.md'))) if (facts_dir / 'semantic').exists() else 0
+            
+            if episodic_count + semantic_count == 0:
+                issues.append('facts 目录为空')
+        
+        if issues:
             self.checks['data_integrity'] = {
                 'status': 'warning',
-                'message': 'EXP 历史文件不存在（首次使用正常）',
-                'fix': '开始使用后自动生成'
+                'message': ', '.join(issues),
+                'fix': '检查数据是否被误删'
+            }
+        else:
+            self.checks['data_integrity'] = {
+                'status': 'ok',
+                'message': '数据完整性正常'
             }
     
     def _check_dependencies(self):
         """检查依赖"""
-        missing_deps = []
-        
-        # 检查 Python 包
         try:
             import inotify
-        except ImportError:
-            missing_deps.append('inotify')
-        
-        try:
             import requests
-        except ImportError:
-            missing_deps.append('requests')
-        
-        if missing_deps:
-            self.checks['dependencies'] = {
-                'status': 'error',
-                'message': f'缺少依赖：{", ".join(missing_deps)}',
-                'fix': f'pip install {" ".join(missing_deps)}'
-            }
-        else:
             self.checks['dependencies'] = {
                 'status': 'ok',
-                'message': '依赖齐全'
+                'message': '依赖正常'
+            }
+        except ImportError as e:
+            self.checks['dependencies'] = {
+                'status': 'error',
+                'message': f'缺少依赖：{e.name}',
+                'fix': '运行 pip install inotify requests'
             }
     
     def _check_permissions(self):
         """检查权限"""
-        # 检查关键目录权限
         dirs_to_check = [
-            ANIMA_HOME,
-            WORKSPACE / "memory",
+            self.config.facts_base,
+            self.agent_dir,
         ]
         
-        permission_issues = []
+        issues = []
         for dir_path in dirs_to_check:
-            if dir_path.exists():
-                if not os.access(dir_path, os.W_OK):
-                    permission_issues.append(str(dir_path))
+            if dir_path.exists() and not os.access(dir_path, os.R_OK | os.W_OK):
+                issues.append(f'{dir_path} 权限不足')
         
-        if permission_issues:
+        if issues:
             self.checks['permissions'] = {
                 'status': 'error',
-                'message': f'无写入权限：{len(permission_issues)} 个目录',
-                'fix': 'chmod -R 755 ' + ' '.join(permission_issues)
+                'message': ', '.join(issues),
+                'fix': '运行 chmod -R 755 修复权限'
             }
         else:
             self.checks['permissions'] = {
@@ -233,104 +372,75 @@ class AnimaDoctor:
     
     def _print_results(self):
         """打印检查结果"""
-        print("诊断结果:")
+        print("\n诊断结果:")
         print("-" * 60)
         
-        for check_name, check_result in self.checks.items():
-            status_icon = {
-                'ok': '✅',
-                'warning': '⚠️',
-                'error': '❌'
-            }.get(check_result['status'], '❓')
+        ok_count = sum(1 for check in self.checks.values() if check['status'] == 'ok')
+        warning_count = sum(1 for check in self.checks.values() if check['status'] == 'warning')
+        error_count = sum(1 for check in self.checks.values() if check['status'] == 'error')
+        
+        for check_name, check_data in self.checks.items():
+            status = check_data['status']
+            message = check_data['message']
             
-            print(f"{status_icon} {check_name}: {check_result['message']}")
+            if status == 'ok':
+                print(f"✅ {check_name}: {message}")
+            elif status == 'warning':
+                print(f"⚠️  {check_name}: {message}")
+            else:
+                print(f"❌ {check_name}: {message}")
         
         print("-" * 60)
-        
-        ok_count = sum(1 for c in self.checks.values() if c['status'] == 'ok')
-        warning_count = sum(1 for c in self.checks.values() if c['status'] == 'warning')
-        error_count = sum(1 for c in self.checks.values() if c['status'] == 'error')
-        
         print(f"总计：{ok_count} 正常，{warning_count} 警告，{error_count} 错误")
     
-    def _user_confirm(self, message):
+    def _user_confirm(self, message) -> bool:
         """用户确认"""
         response = input(f"{message} (y/N): ")
-        return response.lower() in ['y', 'yes']
+        return response.lower() == 'y'
     
     def recover(self):
-        """自修 Anima 问题"""
-        print("\n开始自动修复...")
+        """修复问题"""
+        print("\n执行修复...")
         print("-" * 60)
         
-        fixes = []
+        for check_name, check_data in self.checks.items():
+            if check_data['status'] != 'ok':
+                fix_method = getattr(self, f'_fix_{check_name}', None)
+                if fix_method:
+                    print(f"\n修复 {check_name}...")
+                    fix_method()
         
-        # 1. 修复配置文件
-        if self.checks.get('config', {}).get('status') != 'ok':
-            if self._fix_config():
-                fixes.append('config_fixed')
-        
-        # 2. 修复依赖
-        if self.checks.get('dependencies', {}).get('status') != 'ok':
-            if self._fix_dependencies():
-                fixes.append('dependencies_fixed')
-        
-        # 3. 修复权限
-        if self.checks.get('permissions', {}).get('status') != 'ok':
-            if self._fix_permissions():
-                fixes.append('permissions_fixed')
-        
-        # 4. 重新安装 core
-        if self.checks.get('core_installed', {}).get('status') == 'error':
-            if self._reinstall_core():
-                fixes.append('core_reinstalled')
-        
-        # 打印修复结果
         print("-" * 60)
-        if fixes:
-            print("修复结果:")
-            for fix in fixes:
-                print(f"✅ {fix}")
-            print("-" * 60)
-            print("✅ 修复完成！建议重新运行 anima doctor 验证")
-        else:
-            print("⚠️  部分问题需要手动修复，请查看上方提示")
-        
-        return fixes
+        print("修复完成")
     
     def _fix_config(self):
         """修复配置文件"""
-        try:
-            config_file = ANIMA_HOME / "anima_config.json"
-            config_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            default_config = {
-                "exp": {
-                    "enabled": True,
-                    "dailyLimit": 100
-                },
-                "quest": {
-                    "enabled": True,
-                    "autoRefresh": True
-                },
-                "profile": {
-                    "autoUpdate": True,
-                    "updateInterval": 3600
-                },
-                "data": {
-                    "backupEnabled": True,
-                    "backupTime": "03:00"
-                }
+        config_file = self.agent_dir / 'anima_config.json'
+        
+        default_config = {
+            "exp": {
+                "enabled": True,
+                "dailyLimit": 100
+            },
+            "quest": {
+                "enabled": True,
+                "autoRefresh": True
+            },
+            "profile": {
+                "autoUpdate": True
+            },
+            "data": {
+                "backupEnabled": True,
+                "backupTime": "03:00"
             }
-            
-            with open(config_file, "w", encoding="utf-8") as f:
-                json.dump(default_config, f, ensure_ascii=False, indent=2)
-            
-            print("✅ 配置文件已创建")
-            return True
-        except Exception as e:
-            print(f"❌ 创建配置文件失败：{e}")
-            return False
+        }
+        
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(config_file, "w", encoding="utf-8") as f:
+            json.dump(default_config, f, ensure_ascii=False, indent=2)
+        
+        print("✅ 配置文件已创建")
     
     def _fix_dependencies(self):
         """修复依赖"""
@@ -338,18 +448,16 @@ class AnimaDoctor:
             print("正在安装依赖...")
             subprocess.run([sys.executable, "-m", "pip", "install", "inotify", "requests"], check=True)
             print("✅ 依赖已安装")
-            return True
         except Exception as e:
             print(f"❌ 安装依赖失败：{e}")
             print("💡 请手动运行：pip install inotify requests")
-            return False
     
     def _fix_permissions(self):
         """修复权限"""
         try:
             dirs_to_fix = [
-                ANIMA_HOME,
-                WORKSPACE / "memory",
+                self.config.facts_base,
+                self.agent_dir,
             ]
             
             for dir_path in dirs_to_fix:
@@ -357,47 +465,42 @@ class AnimaDoctor:
                     subprocess.run(["chmod", "-R", "755", str(dir_path)], check=True)
             
             print("✅ 权限已修复")
-            return True
         except Exception as e:
             print(f"❌ 修复权限失败：{e}")
-            return False
-    
-    def _reinstall_core(self):
-        """重新安装 core"""
-        try:
-            print("正在重新安装 core...")
-            
-            # 运行 post-install.sh
-            post_install = SKILL_DIR / "post-install.sh"
-            if post_install.exists():
-                subprocess.run(["bash", str(post_install)], check=True)
-                print("✅ core 已重新安装")
-                return True
-            else:
-                print("❌ 找不到 post-install.sh")
-                return False
-        except Exception as e:
-            print(f"❌ 重新安装 core 失败：{e}")
-            return False
 
 
 def main():
     """主函数"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Anima-AIOS 自检自修工具')
+    parser = argparse.ArgumentParser(description='Anima-AIOS 自检自修工具（配置化版本）')
+    parser.add_argument('--agent', '-a', type=str, help='指定 Agent 名称')
+    parser.add_argument('--all', action='store_true', help='诊断所有 Agent')
     parser.add_argument('--fix', action='store_true', help='自检并修复')
     parser.add_argument('--yes', '-y', action='store_true', help='自动确认修复')
-    parser.add_argument('--auto', '-a', action='store_true', help='自动模式（无需确认）')
+    parser.add_argument('--auto', action='store_true', help='自动模式（无需确认）')
     
     args = parser.parse_args()
     
-    doctor = AnimaDoctor()
-    
-    if args.fix:
-        doctor.diagnose(auto_fix=True, auto_confirm=args.auto or args.yes)
+    if args.all:
+        # 诊断所有 Agent
+        doctor = AnimaDoctor()
+        results = doctor.diagnose_all_agents()
+        
+        print("\n" + "=" * 60)
+        print("所有 Agent 诊断结果:")
+        print("=" * 60)
+        for agent_name, has_issues in results.items():
+            status = "⚠️  有问题" if has_issues else "✅ 正常"
+            print(f"{agent_name}: {status}")
     else:
-        doctor.diagnose()
+        # 诊断指定 Agent 或当前 Agent
+        doctor = AnimaDoctor(args.agent)
+        
+        if args.fix:
+            doctor.diagnose(auto_fix=True, auto_confirm=args.auto or args.yes)
+        else:
+            doctor.diagnose()
 
 
 if __name__ == "__main__":
