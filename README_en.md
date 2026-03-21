@@ -246,13 +246,21 @@ Can't stop watching EXP and level grow!
 ### Installation (OpenClaw Environment)
 
 ```bash
-# Install via ClawHub
+# Install via ClawHub (Recommended)
 clawhub install anima
 
-# Or manual installation
-cd ~/.openclaw/workspace-shuheng/skills/
+# Or manual installation (Admin)
+cd ~/.openclaw/workspace-<YourName>/skills/
 ln -s ../../projects/anima/anima-skill anima
+
+# Or manual installation (Centralized)
+cd ~/.openclaw/skills/
+ln -s ../workspace-shuheng/projects/anima/anima-skill anima
 ```
+
+**Note:**
+- **Centralized Deployment (Recommended)** - All Agents share the same Anima, maintained by admin
+- **Independent Deployment** - Each Agent deploys independently, suitable for special needs
 
 ### Usage
 
