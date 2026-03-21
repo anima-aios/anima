@@ -44,17 +44,22 @@ class CognitiveProfileGenerator:
         self.calculator = DimensionCalculator(agent_name, facts_base)
         self.normalizer = NormalizationEngine(config_path)
     
-    def generate_profile(self, team_scores: Optional[Dict[str, List[float]]] = None, auto_scan: bool = True, auto_save: bool = True) -> Dict:
+    def generate_profile(self, team_scores: Optional[Dict[str, List[float]]] = None, auto_scan: bool = True, auto_save: bool = False) -> Dict:
         """
-        生成完整的认知画像（查询时自动更新）
+        生成完整的认知画像（查询时动态计算）
         
         Args:
             team_scores: 团队分数（可选），用于归一化
             auto_scan: 是否自动扫描团队规模（默认 True）
-            auto_save: 是否自动保存到文件（默认 True，用于实时更新）
+            auto_save: 是否自动保存到文件（默认 False，不保存文件）
         
         Returns:
             完整的认知画像字典
+        
+        设计理念：
+        - 每次查询都动态计算，保证数据实时性
+        - 不保存静态文件，避免数据过期问题
+        - 本地服务器计算很快，无需缓存
         """
         # 1. 计算原始维度分数
         raw_scores = self.calculator.calculate_all_dimensions()
@@ -113,13 +118,10 @@ class CognitiveProfileGenerator:
             'team_rank': self._calculate_team_rank(normalized_scores, team_scores) if team_scores else None
         }
         
-        # 8. 自动保存（查询时自动更新）
-        if auto_save:
-            try:
-                self.save_profile(profile)  # 保存当前 profile，避免无限递归
-            except Exception as e:
-                # 保存失败不影响返回
-                pass
+        # 8. 不保存文件，直接返回（动态计算，实时数据）
+        # 设计理念：每次查询都动态计算，保证数据实时性
+        # if auto_save:
+        #     self.save_profile(profile)  # ← 已废弃，不再保存文件
         
         return profile
     
