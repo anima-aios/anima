@@ -173,10 +173,10 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     if quality == "auto":
         quality = _assess_quality(content)
     
-    # 计算 EXP 奖励
+    # 计算 EXP 奖励（质量系数只奖励不惩罚）
     base_exp = 1 if type == "episodic" else 2
-    quality_multiplier = {"S": 1.5, "A": 1.2, "B": 1.0, "C": 0.8}.get(quality, 1.0)
-    exp_reward = int(base_exp * quality_multiplier)
+    quality_bonus = {"S": 1, "A": 1, "B": 0, "C": 0}.get(quality, 0)  # S/A 级额外 +1 EXP
+    exp_reward = base_exp + quality_bonus  # 基础 EXP + 质量奖励
     
     # 写入记忆（简化实现：追加到今日文件）
     fact_id = _write_memory_simple(content, type, tags, agent_name)
