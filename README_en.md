@@ -11,7 +11,7 @@
 
 ## 🎯 One Sentence Introduction
 
-**Anima-AIOS** is an **OpenClaw gamified growth plugin**, designed for OpenClaw Agents to transform every learning, work, and thinking into visible growth progress!
+**Anima-AIOS** is an important tool that provides **visible cognitive growth capabilities** for Agents on OpenClaw, composed of **底层 OpenClaw plugin + OpenClaw Skill**, to transform every learning, work, and thinking into visible growth progress!
 
 ---
 
@@ -19,7 +19,21 @@
 
 ### What is Anima-AIOS?
 
-Anima-AIOS is an **OpenClaw Skill Plugin** that provides OpenClaw Agents with:
+Anima-AIOS is an important tool that provides **visible cognitive growth capabilities** for Agents on OpenClaw, composed of two parts:
+
+1. **底层 OpenClaw Plugin** - Core Engine (anima-core)
+   - Cognitive assessment engine
+   - EXP tracking system
+   - Memory sync mechanism
+   - Data protection mechanism
+
+2. **OpenClaw Skill** - Interaction Layer (anima-skill)
+   - Gamified display
+   - Conversational interaction
+   - Visualized reports
+   - Self-check tool
+
+**Provides OpenClaw Agents with:**
 
 - 🎮 **Gamified Growth System** - Learn and work like playing a game
 - 📊 **Five-Dimensional Cognitive Assessment** - Understanding/Application/Creation/Metacognition/Collaboration
