@@ -1,4 +1,4 @@
-# Anima-AIOS v5.0.1 发布说明
+# Anima-AIOS 发布说明
 
 **发布日期：** 2026-03-21  
 **版本类型：** Bug 修复版本  
@@ -10,8 +10,8 @@
 
 | 组件 | 旧版本 | 新版本 | 变更类型 |
 |------|--------|--------|----------|
-| **anima-skill** | v5.0.0 | v5.0.1 | Bug 修复 |
-| **anima-core** | v5.0 | v5.1 | Bug 修复 + 优化 |
+| **anima-skill** | v1.0.0 | v1.0.1 | Bug 修复 |
+| **anima-core** | v5.0.0 | v5.0.1 | Bug 修复 + 优化 |
 
 ---
 
@@ -40,13 +40,13 @@
 
 ## 🆕 新功能
 
-### anima-skill v5.0.1
+### anima-skill v1.0.1
 
 - ✅ 错误日志记录（`anima_exp_errors.log`）
 - ✅ 去重检测（检查最近 10 条记忆）
 - ✅ 环境变量配置（`ANIMA_AGENT_NAME`, `ANIMA_WORKSPACE`, `ANIMA_FACTS_BASE`）
 
-### anima-core v5.1
+### anima-core v5.0.1
 
 - ✅ 画像自动更新（查询时自动保存）
 - ✅ 质量系数优化（基础 + 奖励分离）
@@ -157,5 +157,5 @@ MIT License
 ---
 
 **GitHub:** https://github.com/anima-aios/anima  
-**版本：** v5.0.1 (skill) / v5.1 (core)  
+**版本：** v1.0.1 (skill) / v5.0.1 (core)  
 **发布日期：** 2026-03-21

@@ -5,12 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Planned
-- v5.1.0: 成就徽章系统
-- v5.2.0: 周期性挑战
+- anima-skill v1.1.0: 成就徽章系统
+- anima-skill v1.2.0: 周期性挑战
+- anima-core v5.1.0: 语义检索优化
 
 ---
 
-## [skill-v5.0.1] - 2026-03-21
+## [anima-skill-v1.0.1] - 2026-03-21
 
 ### Fixed
 - **Bug 001**: 维度名称不一致 - 统一使用 `understanding`
@@ -25,7 +26,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [core-v5.1] - 2026-03-21
+## [anima-core-v5.0.1] - 2026-03-21
 
 ### Fixed
 - **Bug 003**: 两套等级系统冲突 - 废弃 `normalization_engine.py` 的等级计算
@@ -43,7 +44,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [skill-v5.0.0] - 2026-03-21
+## [anima-skill-v1.0.0] - 2026-03-21
 
 ### Added
 - 游戏化成长系统
@@ -59,7 +60,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [core-v5.0] - 2026-03-21
+## [anima-core-v5.0.0] - 2026-03-21
 
 ### Added
 - EXP 追踪器（多维度 + 每日限额）
@@ -75,6 +76,6 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-**版本：** v5.0.1 (skill) / v5.1 (core)  
+**版本：** anima-skill v1.0.1 / anima-core v5.0.1  
 **发布日期：** 2026-03-21  
 **GitHub:** https://github.com/anima-aios/anima
