@@ -32,7 +32,10 @@ if ANIMA_HOME.exists():
     sys.path.insert(0, str(ANIMA_HOME / "core"))
 
 # OpenClaw workspace 路径
-WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
+WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace-shuheng")))
+
+# 事实数据路径（facts_base）
+FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", "/home/画像"))
 
 
 # ============================================================================
@@ -218,8 +221,46 @@ def _write_memory_simple(content: str, type: str, tags: List[str], agent_name: s
 
 
 def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool:
-    """检查重复（简单实现：检查最近内容）"""
-    # TODO: 实现基于内容哈希或向量相似度的去重
+    """
+    检查重复内容（基于内容哈希）
+    
+    Args:
+        content: 记忆内容
+        agent_name: Agent 名称
+        threshold: 相似度阈值（0-100）
+    
+    Returns:
+        True 如果检测到重复，否则 False
+    """
+    if not content or len(content) < 10:
+        return False
+    
+    # 计算内容哈希
+    content_hash = hash(content)
+    
+    # 检查今日记忆文件
+    today = datetime.now().strftime("%Y-%m-%d")
+    memory_file = WORKSPACE / "memory" / f"{today}.md"
+    
+    if not memory_file.exists():
+        return False
+    
+    # 读取今日记忆，检查是否有相同哈希
+    try:
+        with open(memory_file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            # 检查最近 10 条记忆
+            recent_lines = lines[-10:] if len(lines) > 10 else lines
+            for line in recent_lines:
+                if content.strip() in line:
+                    return True
+    except FileNotFoundError:
+        # 文件不存在，返回 False
+        pass
+    except Exception as e:
+        # 记录错误但不影响主流程
+        _log_exp_error(agent_name, e)
+    
     return False
 
 
@@ -277,7 +318,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
         try:
             sys.path.insert(0, str(ANIMA_HOME / "core"))
             from cognitive_profile import CognitiveProfileGenerator
-            generator = CognitiveProfileGenerator(agent_name, facts_base="/home/画像")
+            generator = CognitiveProfileGenerator(agent_name, facts_base=str(FACTS_BASE))
             profile = generator.generate_profile(auto_scan=False)
             
             # core 返回的维度名称映射
@@ -409,7 +450,7 @@ def _get_exp_simple(agent_name: str) -> Dict:
     
     if not exp_file.exists():
         # 尝试旧路径
-        exp_file = Path("/home/画像") / agent_name / "exp_history.jsonl"
+        exp_file = FACTS_BASE / agent_name / "exp_history.jsonl"
     
     total_exp = 0
     today_exp = 0
@@ -432,7 +473,8 @@ def _get_exp_simple(agent_name: str) -> Dict:
                     # 分类统计
                     action = record.get("action", "other")
                     breakdown[action] = breakdown.get(action, 0) + exp
-                except:
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    # 跳过格式错误的记录
                     continue
     
     # 计算等级
@@ -721,9 +763,26 @@ def normalize_score(raw_score: float, metric_type: str, team_size: int) -> Dict:
 # ============================================================================
 
 def _get_current_agent() -> str:
-    """获取当前 Agent 名称（简化实现）"""
-    # TODO: 从 OpenClaw 上下文获取
-    return "枢衡"
+    """
+    获取当前 Agent 名称
+    
+    优先级：
+    1. 环境变量 ANIMA_AGENT_NAME
+    2. OpenClaw 会话上下文（如果可用）
+    3. 默认值 "Agent"
+    """
+    import os
+    
+    # 1. 从环境变量获取
+    agent_name = os.getenv("ANIMA_AGENT_NAME")
+    if agent_name:
+        return agent_name
+    
+    # 2. 从 OpenClaw 上下文获取（如果可用）
+    # TODO: 集成 OpenClaw 会话 API
+    
+    # 3. 默认值
+    return "Agent"
 
 
 def _add_exp(agent_name: str, dimension: str, exp: int, action: str, details: Dict):
@@ -761,8 +820,12 @@ def _log_exp_error(agent_name: str, error: Exception):
         timestamp = datetime.now().isoformat()
         with open(log_file, "a", encoding="utf-8") as f:
             f.write(f"[{timestamp}] EXP 记录失败 - Agent: {agent_name}, 错误：{error}\n")
-    except:
-        pass  # 日志记录失败也不影响主流程
+    except (IOError, OSError, PermissionError) as e:
+        # 日志写入失败，静默处理（避免无限递归）
+        pass
+    except Exception:
+        # 其他错误也静默处理
+        pass
 
 
 def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, details: Dict):
@@ -780,8 +843,12 @@ def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, de
     try:
         with open(exp_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    except:
-        pass
+    except (IOError, OSError, PermissionError) as e:
+        # 文件写入失败，记录到错误日志
+        _log_exp_error(agent_name, e)
+    except Exception as e:
+        # 其他错误也记录
+        _log_exp_error(agent_name, e)
 
 
 # ============================================================================

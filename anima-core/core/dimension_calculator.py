@@ -29,31 +29,42 @@ class DimensionCalculator:
     """五维认知分数计算器"""
     
     # EXP 权重配置（基于 Bloom 认知分类）
+    # 维度权重（与 normalization_engine.py 保持一致）
+    # creation 权重最高 (0.25)，鼓励知识创造
+    # metacognition 权重最低 (0.15)，但仍是重要的
+    DIMENSION_WEIGHTS = {
+        'understanding': 0.20,
+        'application': 0.20,
+        'creation': 0.25,
+        'metacognition': 0.15,
+        'collaboration': 0.20
+    }
+    
     EXP_WEIGHTS = {
-        # 知识内化维度
+        # 知识内化维度 (权重 0.20)
         'write_episodic_fact': {'dimension': 'understanding', 'exp': 1},
-        'write_semantic_fact': {'dimension': 'understanding', 'exp': 2},
+        'write_semantic_fact': {'dimension': 'understanding', 'exp': 2},  # 双倍，鼓励知识沉淀
         'fact_length_bonus': {'dimension': 'understanding', 'exp': 0.5},  # >200 字
         'use_tags': {'dimension': 'understanding', 'exp': 0.5},
         
-        # 知识应用维度
+        # 知识应用维度 (权重 0.20)
         'memory_search': {'dimension': 'application', 'exp': 2},
         'search_then_complete_task': {'dimension': 'application', 'exp': 10},
         'knowledge_reuse': {'dimension': 'application', 'exp': 3},
         
-        # 知识创造维度
-        'share_to_shared': {'dimension': 'creation', 'exp': 5},
-        'create_skill': {'dimension': 'creation', 'exp': 10},
-        'knowledge_synthesis': {'dimension': 'creation', 'exp': 4},
+        # 知识创造维度 (权重 0.25 - 最高，鼓励创造)
+        'share_to_shared': {'dimension': 'creation', 'exp': 6},  # +20% (权重奖励)
+        'create_skill': {'dimension': 'creation', 'exp': 12},    # +20%
+        'knowledge_synthesis': {'dimension': 'creation', 'exp': 5},  # +25%
         'knowledge_cited': {'dimension': 'creation', 'exp': 2},  # 被他人引用
         
-        # 元认知维度
+        # 元认知维度 (权重 0.15 - 最低，但仍重要)
         'weekly_review': {'dimension': 'metacognition', 'exp': 5},
         'self_reflection_fact': {'dimension': 'metacognition', 'exp': 2},
         'goal_setting': {'dimension': 'metacognition', 'exp': 3},
         'progress_tracking': {'dimension': 'metacognition', 'exp': 2},
         
-        # 协作认知维度
+        # 协作认知维度 (权重 0.20)
         'help_others': {'dimension': 'collaboration', 'exp': 3},
         'seek_help': {'dimension': 'collaboration', 'exp': 1},
         'collab_task': {'dimension': 'collaboration', 'exp': 4},

@@ -83,22 +83,29 @@ class EXPTracker:
         if date is None:
             date = datetime.now().strftime('%Y-%m-%d')
         
-        # 检查每日上限
+        # 检查每日上限（先检查基础 EXP，质量奖励作为额外奖励）
         current_exp = self._get_daily_exp(dimension, date)
         limit = self.DAILY_EXP_LIMITS.get(dimension, 50)
         
-        final_exp = exp * quality_multiplier
+        # 修复 Bug 006：质量系数不应导致更容易触达上限
+        # 基础 EXP 计入上限，质量奖励作为额外奖励（不占上限）
+        base_exp_to_add = min(exp, limit - current_exp)  # 基础 EXP 受上限限制
+        quality_bonus = exp * (quality_multiplier - 1.0)  # 质量奖励部分
         
-        if current_exp + final_exp > limit:
-            # 超过上限，只记录到上限
+        # 质量奖励也受剩余空间限制，但不影响基础 EXP
+        if current_exp + base_exp_to_add >= limit:
+            # 基础 EXP 已达上限，质量奖励也无法添加
             remaining = limit - current_exp
             if remaining <= 0:
                 return False, f"今日 {dimension} 维度 EXP 已达上限 ({limit})"
-            
             final_exp = remaining
             message = f"添加 EXP {final_exp:.1f}（达到今日上限）"
         else:
-            message = f"添加 EXP {final_exp:.1f}"
+            # 基础 EXP 未达上限，可以添加质量奖励
+            remaining_after_base = limit - (current_exp + base_exp_to_add)
+            quality_bonus_to_add = min(quality_bonus, remaining_after_base)
+            final_exp = base_exp_to_add + quality_bonus_to_add
+            message = f"添加 EXP {final_exp:.1f}（基础 {base_exp_to_add:.1f} + 质量奖励 {quality_bonus_to_add:.1f}）"
         
         # 创建记录
         record = {
