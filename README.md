@@ -3,25 +3,65 @@
 > **让成长可见，让认知可量**  
 > **Making Growth Visible, Making Cognition Measurable**
 
-[![Version](https://img.shields.io/badge/version-5.0.1-green.svg)](https://github.com/anima-aios/anima/releases)
+[![Version](https://img.shields.io/badge/version-5.0.2-green.svg)](https://github.com/anima-aios/anima/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/anima-aios/anima/actions)
-[![Core](https://img.shields.io/badge/core-v5.0.1-blue.svg)](https://github.com/anima-aios/anima/releases)
-[![Skill](https://img.shields.io/badge/skill-v1.0.1-orange.svg)](https://github.com/anima-aios/anima/releases)
 [![Platform](https://img.shields.io/badge/platform-OpenClaw-lightgrey.svg)](https://openclaw.ai)
 
 ---
 
 ## 🎯 一句话介绍
 
-**Anima-AIOS** 是一个**游戏化认知成长系统**，让每一次学习、工作、思考都转化为可视化的成长进度，让你在升级打怪的快感中持续进步！
+**Anima-AIOS** 是一个**OpenClaw 游戏化成长插件**，专为 OpenClaw Agent 设计，让每一次学习、工作、思考都转化为可视化的成长进度！
+
+---
+
+## 🔌 OpenClaw 插件定位
+
+### 什么是 Anima-AIOS？
+
+Anima-AIOS 是一个 **OpenClaw Skill 插件**，为 OpenClaw 平台的 Agent 提供：
+
+- 🎮 **游戏化成长系统** - 像玩游戏一样学习工作
+- 📊 **五维认知评估** - 内化/应用/创造/元认知/协作
+- 📈 **等级与 EXP 系统** - 累积制成长，只升不降
+- 🏆 **团队排行榜** - 良性竞争，激发积极性
+- 📝 **智能记忆管理** - 自动同步，三层保护
+
+### 与 OpenClaw 的关系
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    OpenClaw 平台                         │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │              Anima-AIOS Skill                      │ │
+│  │                                                    │ │
+│  │  • 作为 OpenClaw Skill 加载                        │ │
+│  │  • 为 Agent 提供认知成长能力                       │ │
+│  │  • 与 OpenClaw 记忆系统深度集成                    │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
+│  │   Agent 1   │  │   Agent 2   │  │   Agent 3   │      │
+│  │  (日安)     │  │  (枢衡)     │  │  (星澜)     │      │
+│  └─────────────┘  └─────────────┘  └─────────────┘      │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 为什么选择 Anima-AIOS？
+
+**为 OpenClaw Agent 量身定制：**
+- ✅ 深度集成 OpenClaw 记忆系统
+- ✅ 支持多 Agent 协作与竞争
+- ✅ 自动同步记忆到画像目录
+- ✅ 与 OpenClaw Doctor 风格统一
 
 ---
 
 ## 💡 带来的价值
 
-### 对个人
+### 对个人 Agent
 - 🎮 **游戏化成长** - 像玩游戏一样学习工作，停不下来
 - 📊 **认知可视化** - 清晰看到自己的能力分布和成长轨迹
 - 🎯 **目标驱动** - 每日任务 + 长期目标，告别拖延症
@@ -77,133 +117,6 @@
 
 ---
 
-## 🏗️ 架构设计
-
-### 双层架构：静默成长 + 游戏化体验
-
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                        用户 (立文/日安)                            │
-│                   "让成长可见，让认知可量"                          │
-└───────────────────────────────────────────────────────────────────┘
-                              ↓ 对话交互
-┌───────────────────────────────────────────────────────────────────┐
-│              🎮 Anima-skill v1.x - 游戏化体验层                    │
-│                                                                   │
-│  设计哲学：让成长过程有趣、可见、有仪式感                           │
-│                                                                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐   │
-│  │ 🎨 可视化   │  │ 🎮 游戏化   │  │ 💬 交互引擎             │   │
-│  │             │  │             │  │                         │   │
-│  │ • ASCII 卡片 │  │ • 每日任务  │  │ • 对话式查询            │   │
-│  │ • 进度条    │  │ • 团队排行  │  │ • 即时反馈              │   │
-│  │ • 雷达图    │  │ • 成就徽章  │  │ • 情感化文案            │   │
-│  │ • 升级动画  │  │ • 周期挑战  │  │ • 个性化推荐            │   │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘   │
-│                                                                   │
-│  核心算法：                                                       │
-│  • 画像渲染引擎 - ASCII 艺术生成                                  │
-│  • 进度可视化算法 - 实时进度条计算                                │
-│  • 情感化文案生成 - 基于状态的动态文案                            │
-└───────────────────────────────────────────────────────────────────┘
-                              ↓ 调用
-┌───────────────────────────────────────────────────────────────────┐
-│              🧠 Anima-core v5.x - 静默成长引擎                     │
-│                                                                   │
-│  设计哲学：成长以静默无声的方式进行                                 │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ 📊 记忆宫殿体系 (Memory Palace)                              │ │
-│  │                                                             │ │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │ │
-│  │  │ 情景记忆    │  │ 语义记忆    │  │ 程序记忆    │      │ │
-│  │  │ Episodic    │  │ Semantic    │  │ Procedural  │      │ │
-│  │  │ (经历记录)  │  │ (知识沉淀)  │  │ (技能记忆)  │      │ │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘      │ │
-│  │                                                             │ │
-│  │  记忆管理算法：                                              │ │
-│  │  • 智能标签提取 (NLP)                                       │ │
-│  │  • 内容哈希去重                                             │ │
-│  │  • 语义向量检索 (SiliconFlow bge-m3)                        │ │
-│  │  • 记忆衰退曲线 (Ebbinghaus)                                │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ 📐 五维认知金字塔模型 (Cognitive Pyramid)                    │ │
-│  │                                                             │ │
-│  │            创造 (Creation)                                  │ │
-│  │               /\                                            │ │
-│  │              /  \                                           │ │
-│  │             /    \                                          │ │
-│  │            /______\                                         │ │
-│  │     应用          元认知                                    │ │
-│  │   (Application)  (Metacognition)                            │ │
-│  │          \        /                                         │ │
-│  │           \      /                                          │ │
-│  │            \    /                                           │ │
-│  │             \  /                                            │ │
-│  │              \/                                             │ │
-│  │      内化          协作                                     │ │
-│  │   (Understanding) (Collaboration)                           │ │
-│  │                                                             │ │
-│  │  评估算法：                                                 │ │
-│  │  • 维度分数计算 (基于 EXP 分布)                              │ │
-│  │  • 团队归一化算法 (公平比较)                                 │ │
-│  │  • 认知阶段判定 (Novice→Expert)                             │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ 📈 等级与成长系统                                            │ │
-│  │                                                             │ │
-│  │  等级公式：level = max(1, int(exp ^ 0.28))                  │ │
-│  │                                                             │ │
-│  │  成长阶段：                                                  │ │
-│  │  Lv.1-10   新手期     (0 → 5,000 EXP)   1-7 天             │ │
-│  │  Lv.11-20  成长期     (5k → 20k EXP)    1-4 周             │ │
-│  │  Lv.21-50  成熟期     (20k → 100k EXP)  1-6 月             │ │
-│  │  Lv.51-100 大师期     (100k → 14M EXP)  6 月 - 终身         │ │
-│  │                                                             │ │
-│  │  EXP 获取规则：                                              │ │
-│  │  • 写 episodic 记忆  +1 EXP                                  │ │
-│  │  • 写 semantic 记忆  +2 EXP (双倍)                           │ │
-│  │  • 搜索记忆        +2 EXP                                   │ │
-│  │  • 完成每日任务    +5~20 EXP                                │ │
-│  │  • 高质量内容      +20%~50% 奖励                            │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ 🛡️ 数据保护机制 (5 层防护)                                    │ │
-│  │                                                             │ │
-│  │  Layer 1: DO_NOT_DELETE.txt 标记                            │ │
-│  │  Layer 2: 自动备份脚本 (每日 03:00)                          │ │
-│  │  Layer 3: 清理前检查 (safe-cleanup-check.sh)                │ │
-│  │  Layer 4: 定期备份 Cron                                     │ │
-│  │  Layer 5: 数据保护规范 (删除权限控制)                        │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────┘
-                              ↓ 存储
-┌───────────────────────────────────────────────────────────────────┐
-│                     文件系统 (~/.anima/)                          │
-│                                                                   │
-│  /memory/              - 记忆文件 (Markdown)                      │
-│  /facts/               - 事实记录                                 │
-│  exp_history.jsonl     - EXP 历史记录                             │
-│  cognitive_profile.json - 认知画像快照                            │
-│  daily_quest.json      - 每日任务状态                             │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-**设计理念：**
-- **skill 负责精彩** - 快速迭代，用户体验驱动
-- **core 负责稳定** - 稳步演进，问题驱动
-- **关注点分离** - 互不干扰，各司其职
-
-**详情：** [docs/instructions/ARCHITECTURE_PRINCIPLES.md](docs/instructions/ARCHITECTURE_PRINCIPLES.md)
-
-**详情：** [docs/instructions/ARCHITECTURE_PRINCIPLES.md](docs/instructions/ARCHITECTURE_PRINCIPLES.md)
-
----
-
 ## ✨ 核心亮点
 
 ### 🎮 游戏化设计
@@ -248,165 +161,25 @@
 - **自动标签** - NLP 提取关键词
 - **去重检测** - 防止重复刷 EXP
 - **质量评估** - S/A/B/C 四级，鼓励高质量
-- **语义检索** - 支持向量搜索，快速定位知识
-
----
-
-## 📈 版本迭代历史
-
-### v5.0.1（2026-03-21）🆕
-**主题：** Bug 修复 + 文档整理
-
-**新增：**
-- ✅ 修复 10 个 Bug（4 P0 + 3 P1 + 3 P2）
-- ✅ 整理文档结构（docs/ 目录）
-- ✅ 创建完整文档导航
-- ✅ 100% 测试覆盖率
-
-**详情：** [docs/intro/RELEASE_v5.0.1.md](docs/intro/RELEASE_v5.0.1.md)
-
----
-
-### v5.0.0（2026-03-21）
-**主题：** 品牌升级 + 游戏化系统
-
-**新增：**
-- ✅ 品牌升级：Memora → Anima-AIOS
-- ✅ 游戏化成长系统
-- ✅ 9 个核心工具（memory_search_v2, get_cognitive_profile 等）
-- ✅ 每日任务系统
-- ✅ 团队排行榜
-- ✅ 质量评估系统（S/A/B/C 四级）
-
-**详情：** [docs/intro/RELEASE_v5.0.0.md](docs/intro/RELEASE_SUMMARY.md)
-
----
-
-### v4.x（2026-03-20）
-**主题：** 等级系统 + 数据保护
-
-**新增：**
-- ✅ 累积制等级系统（EXP 只增不减，等级只升不降）
-- ✅ 5 层数据保护机制
-- ✅ 每日 EXP 上限（防刷）
-- ✅ 质量系数（鼓励高质量内容）
-
-**详情：** [docs/intro/RELEASE_v4.0.3-final.md](docs/intro/RELEASE_v4.0.3-final.md)
-
----
-
-### v3.x（2026-03-15）
-**主题：** 认知画像 + 归一化引擎
-
-**新增：**
-- ✅ 五维认知评估模型
-- ✅ 团队归一化引擎（公平比较）
-- ✅ 可视化画像卡片
-
-**详情：** [docs/intro/README_ANIMA.md](docs/intro/README_ANIMA.md)
-
----
-
-### v2.x（2026-03-13）
-**主题：** 记忆管理 + EXP 追踪
-
-**新增：**
-- ✅ 记忆写入/搜索
-- ✅ EXP 追踪器
-- ✅ 基础等级系统
-
-**详情：** [docs/intro/CHANGELOG.md](docs/intro/CHANGELOG.md)
-
----
-
-## 🔮 未来规划
-
-### v5.1.0（2026-04-05）📅
-**主题：** 成就系统
-
-**计划：**
-- 🏅 10 个成就徽章（新手起步/知识达人/搜索专家等）
-- 🎉 升级庆祝动画
-- 🎴 徽章展示卡片
-
-**详情：** [docs/instructions/ROADMAP_v1.1.0.md](docs/instructions/ROADMAP_v1.1.0.md)
-
----
-
-### v5.2.0（2026-04-20）📅
-**主题：** 周期性挑战
-
-**计划：**
-- 📅 每周挑战任务
-- 🏆 周/月排行榜
-- 🎁 周期性奖励
-
----
-
-### v5.3.0（2026-05-10）📅
-**主题：** 社交互动
-
-**计划：**
-- ⚔️ 认知维度对战（PK 机制）
-- 🤝 团队协作任务
-- 👥 好友系统
-
----
-
-### v5.4.0（2026-05-25）📅
-**主题：** 个性化体验
-
-**计划：**
-- 🎨 多种卡片主题
-- 🎤 语音播报
-- 😊 表情符号增强
-
----
-
-## 📚 文档索引
-
-### 📘 用户文档（快速开始）
-| 文档 | 说明 |
-|------|------|
-| [🚀 快速开始](docs/user/README.md) | 5 分钟上手指南 |
-| [📖 完整使用手册](docs/user/USAGE.md) | 详细使用教程 |
-| [💡 使用示例](docs/user/EXAMPLES.md) | 实际使用案例 |
-| [🎮 游戏化功能](docs/user/GAME_FEATURES.md) | 游戏化机制介绍 |
-
-### 📖 项目介绍
-| 文档 | 说明 |
-|------|------|
-| [🌟 项目主介绍](docs/intro/README.md) | 全面了解 Anima |
-| [⚙️ Core 引擎介绍](docs/intro/README_ANIMA.md) | 核心引擎详解 |
-| [📢 v5.0.1 发布说明](docs/intro/RELEASE_v5.0.1.md) | 最新版本特性 |
-| [📝 变更日志](docs/intro/CHANGELOG.md) | 完整变更记录 |
-| [🗺️ 项目路线图](docs/intro/ROADMAP.md) | 未来发展规划 |
-
-### 📋 技术文档
-| 文档 | 说明 |
-|------|------|
-| [🏛️ 架构原则](docs/instructions/ARCHITECTURE_PRINCIPLES.md) | 架构设计规范 |
-| [🐛 Bug 修复报告](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.1 修复详情 |
-| [✅ 开源检查清单](docs/instructions/OPEN_SOURCE_CHECKLIST.md) | 发布检查清单 |
-
-### 🔧 核心代码
-| 文件 | 说明 |
-|------|------|
-| `anima-skill/SKILL.md` | OpenClaw Skill 定义 |
-| `anima-skill/anima_tools.py` | 工具实现代码 |
-| `anima-core/core/` | 核心引擎代码 |
+- **三层同步** - 实时/启动/定时，数据不丢失
 
 ---
 
 ## 🚀 快速开始
 
-### 安装
+### 安装（OpenClaw 环境）
+
 ```bash
 # 通过 ClawHub 安装
 clawhub install anima
+
+# 或手动安装
+cd ~/.openclaw/workspace-shuheng/skills/
+ln -s ../../projects/anima/anima-skill anima
 ```
 
 ### 使用
+
 ```
 # 查看认知画像
 "我的认知画像是什么？"
@@ -424,15 +197,92 @@ clawhub install anima
 "搜索关于 Vega 的记忆"
 ```
 
+### 自检
+
+```bash
+# 检查 Anima 状态
+anima doctor
+
+# 自动修复
+anima doctor --fix --auto
+```
+
+---
+
+## 📈 版本迭代历史
+
+### v5.0.2（2026-03-21）🆕
+**主题：** 记忆同步机制
+
+**新增：**
+- ✅ 三层记忆同步机制（实时/启动/定时）
+- ✅ Doctor 增加记忆同步检查
+- ✅ 完整文档和代码审查
+
+**详情：** [docs/MEMORY_SYNC_GUIDE.md](docs/MEMORY_SYNC_GUIDE.md)
+
+---
+
+### v5.0.1（2026-03-21）
+**主题：** 自检自修工具
+
+**新增：**
+- ✅ Anima doctor 自检自修工具
+- ✅ 6 项检查（skill/core/配置/数据/依赖/权限）
+- ✅ 自动修复功能
+
+---
+
+### v5.0.0（2026-03-21）
+**主题：** 品牌升级 + 游戏化系统
+
+**新增：**
+- ✅ 品牌升级：Memora → Anima-AIOS
+- ✅ 游戏化成长系统
+- ✅ 9 个核心工具
+- ✅ 每日任务系统
+- ✅ 团队排行榜
+
+**详情：** [docs/intro/RELEASE_v5.0.1.md](docs/intro/RELEASE_v5.0.1.md)
+
+---
+
+## 📚 文档索引
+
+### 📘 用户文档
+| 文档 | 说明 |
+|------|------|
+| [快速开始](docs/user/README.md) | 5 分钟上手指南 |
+| [使用手册](docs/user/USAGE.md) | 详细使用教程 |
+| [使用示例](docs/user/EXAMPLES.md) | 实际使用案例 |
+| [游戏化功能](docs/user/GAME_FEATURES.md) | 游戏化机制介绍 |
+
+### 📖 项目介绍
+| 文档 | 说明 |
+|------|------|
+| [项目主介绍](docs/intro/README.md) | 全面了解 Anima |
+| [Core 引擎介绍](docs/intro/README_ANIMA.md) | 核心引擎详解 |
+| [发布说明](docs/intro/RELEASE_v5.0.1.md) | 最新版本特性 |
+| [变更日志](CHANGELOG.md) | 完整变更记录 |
+| [项目路线图](docs/intro/ROADMAP.md) | 未来发展规划 |
+
+### 📋 技术文档
+| 文档 | 说明 |
+|------|------|
+| [架构原则](docs/instructions/ARCHITECTURE_PRINCIPLES.md) | 架构设计规范 |
+| [Bug 修复报告](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.1 修复详情 |
+| [记忆同步指南](docs/MEMORY_SYNC_GUIDE.md) | 三层同步机制详解 |
+| [代码审查报告](docs/CODE_REVIEW_20260321.md) | 代码质量评估 |
+
 ---
 
 ## 📊 当前状态
 
-- **版本：** v5.0.1 ✅
+- **版本：** v5.0.2 ✅
 - **测试：** 12/12 通过 (100%) ✅
 - **文档：** 完整 ✅
-- **部署：** 9 个 Agent 已部署 ✅
-- **开源：** 准备发布 🎉
+- **部署：** 15 个 Agent 已部署 ✅
+- **开源：** GitHub 已发布 🎉
 
 ---
 
@@ -454,8 +304,9 @@ MIT License
 
 - **GitHub:** https://github.com/anima-aios/anima
 - **Gitee:** https://gitee.com/Ryan_9/Vega
+- **OpenClaw:** https://openclaw.ai
 - **完整文档:** [docs/README.md](docs/README.md)
-- **使用手册:** [docs/user/USAGE.md](docs/user/USAGE.md)
+- **English README:** [README_en.md](README_en.md)
 
 ---
 
@@ -475,6 +326,6 @@ clawhub install anima
 
 ---
 
-**版本：** v5.0.1 | **最后更新：** 2026-03-21 | **状态：** ✅ 稳定
+**版本：** v5.0.2 | **最后更新：** 2026-03-22 | **状态：** ✅ 稳定
 
 </div>
