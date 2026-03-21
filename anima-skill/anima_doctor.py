@@ -22,6 +22,9 @@ import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
+
+# 工作空间路径
+WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
 from typing import Dict, List, Optional
 
 # 导入配置模块
@@ -97,6 +100,7 @@ class AnimaDoctor:
         self._check_exp_data()
         self._check_profile_dynamic()
         self._check_memory_files()
+        self._check_memory_sync()
         self._check_config()
         self._check_data_integrity()
         self._check_dependencies()
@@ -315,8 +319,19 @@ class AnimaDoctor:
             episodic_count = len(list((facts_dir / 'episodic').glob('*.md'))) if (facts_dir / 'episodic').exists() else 0
             semantic_count = len(list((facts_dir / 'semantic').glob('*.md'))) if (facts_dir / 'semantic').exists() else 0
             
+            # 修复：使用 rglob 递归查找所有子目录，支持.md 和.json 格式
+            episodic_count = len(list((facts_dir / 'episodic').rglob('*.md'))) + len(list((facts_dir / 'episodic').rglob('*.json'))) if (facts_dir / 'episodic').exists() else 0
+            semantic_count = len(list((facts_dir / 'semantic').rglob('*.md'))) + len(list((facts_dir / 'semantic').rglob('*.json'))) if (facts_dir / 'semantic').exists() else 0
+            
             if episodic_count + semantic_count == 0:
-                issues.append('facts 目录为空')
+                issues.append(f'facts 目录为空 (episodic: {episodic_count}, semantic: {semantic_count})')
+            else:
+                # 有数据，正常
+                self.checks['data_integrity'] = {
+                    'status': 'ok',
+                    'message': f'数据完整 (episodic: {episodic_count}, semantic: {semantic_count})'
+                }
+                return
         
         if issues:
             self.checks['data_integrity'] = {
@@ -368,6 +383,34 @@ class AnimaDoctor:
             self.checks['permissions'] = {
                 'status': 'ok',
                 'message': '权限正常'
+            }
+    
+    def _check_memory_sync(self):
+        """检查记忆同步状态"""
+        workspace_mem = WORKSPACE / "memory"
+        portrait_mem = Path(f"/home/画像/{self.agent_name}/memory")
+        
+        # 检查今日记忆
+        today = datetime.now().strftime("%Y-%m-%d")
+        workspace_today = workspace_mem / f"{today}.md"
+        portrait_today = portrait_mem / f"{today}.md"
+        
+        if workspace_today.exists() and not portrait_today.exists():
+            self.checks['memory_sync'] = {
+                'status': 'error',
+                'message': '记忆未同步到画像目录',
+                'fix': '运行 sync-memory.sh 或重新写入记忆'
+            }
+        elif workspace_today.exists() and portrait_today.exists():
+            self.checks['memory_sync'] = {
+                'status': 'ok',
+                'message': '记忆同步正常'
+            }
+        else:
+            self.checks['memory_sync'] = {
+                'status': 'warning',
+                'message': '今日无记忆（首次使用正常）',
+                'fix': '开始写入记忆后会自动同步'
             }
     
     def _print_results(self):
@@ -441,6 +484,12 @@ class AnimaDoctor:
             json.dump(default_config, f, ensure_ascii=False, indent=2)
         
         print("✅ 配置文件已创建")
+        
+        # 更新检查状态
+        self.checks['config'] = {
+            'status': 'ok',
+            'message': '配置文件已创建'
+        }
     
     def _fix_dependencies(self):
         """修复依赖"""

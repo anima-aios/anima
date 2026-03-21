@@ -200,7 +200,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
 
 
 def _write_memory_simple(content: str, type: str, tags: List[str], agent_name: str) -> str:
-    """简单写入记忆到今日文件"""
+    """简单写入记忆到今日文件（并同步到画像目录）"""
     today = datetime.now().strftime("%Y-%m-%d")
     memory_file = WORKSPACE / "memory" / f"{today}.md"
     
@@ -217,7 +217,49 @@ def _write_memory_simple(content: str, type: str, tags: List[str], agent_name: s
         if tags:
             f.write(f"  标签：{', '.join(tags)}\n")
     
+    # 同步到画像目录（第一层：实时同步）
+    _sync_to_portrait_memory(content, type, tags, agent_name, today, timestamp)
+    
     return fact_id
+
+
+def _sync_to_portrait_memory(content: str, type: str, tags: List[str], 
+                             agent_name: str, today: str, timestamp: str):
+    """
+    同步记忆到画像目录（第一层：实时同步）
+    
+    Args:
+        content: 记忆内容
+        type: 记忆类型
+        tags: 标签列表
+        agent_name: Agent 名称
+        today: 今日日期
+        timestamp: 时间戳
+    """
+    try:
+        # 画像目录路径
+        portrait_dir = Path(f"/home/画像/{agent_name}/memory/")
+        portrait_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 写入今日记忆文件
+        portrait_file = portrait_dir / f"{today}.md"
+        
+        # 检查是否已存在（避免重复）
+        if portrait_file.exists():
+            with open(portrait_file, "r", encoding="utf-8") as f:
+                if content in f.read():
+                    return  # 已存在，跳过
+        
+        # 追加写入
+        with open(portrait_file, "a", encoding="utf-8") as f:
+            f.write(f"\n- [{timestamp}] {content} #{type}\n")
+            if tags:
+                f.write(f"  标签：{', '.join(tags)}\n")
+        
+        print(f"✅ 记忆已同步到画像目录：{agent_name}/{today}.md")
+    except Exception as e:
+        print(f"⚠️  同步记忆失败：{e}")
+        # 不影响主流程
 
 
 def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool:
