@@ -44,13 +44,14 @@ class CognitiveProfileGenerator:
         self.calculator = DimensionCalculator(agent_name, facts_base)
         self.normalizer = NormalizationEngine(config_path)
     
-    def generate_profile(self, team_scores: Optional[Dict[str, List[float]]] = None, auto_scan: bool = True) -> Dict:
+    def generate_profile(self, team_scores: Optional[Dict[str, List[float]]] = None, auto_scan: bool = True, auto_save: bool = True) -> Dict:
         """
-        生成完整的认知画像
+        生成完整的认知画像（查询时自动更新）
         
         Args:
             team_scores: 团队分数（可选），用于归一化
             auto_scan: 是否自动扫描团队规模（默认 True）
+            auto_save: 是否自动保存到文件（默认 True，用于实时更新）
         
         Returns:
             完整的认知画像字典
@@ -111,6 +112,14 @@ class CognitiveProfileGenerator:
             
             'team_rank': self._calculate_team_rank(normalized_scores, team_scores) if team_scores else None
         }
+        
+        # 8. 自动保存（查询时自动更新）
+        if auto_save:
+            try:
+                self.save_profile(profile)  # 保存当前 profile，避免无限递归
+            except Exception as e:
+                # 保存失败不影响返回
+                pass
         
         return profile
     
@@ -195,17 +204,19 @@ class CognitiveProfileGenerator:
         
         return ranks
     
-    def save_profile(self, output_path: Optional[str] = None) -> str:
+    def save_profile(self, profile: Optional[Dict] = None, output_path: Optional[str] = None) -> str:
         """
         保存认知画像到文件
         
         Args:
+            profile: 认知画像字典（可选），不传则重新生成
             output_path: 输出路径（可选），不传则保存到 agent 目录
         
         Returns:
             保存的文件路径
         """
-        profile = self.generate_profile()
+        if profile is None:
+            profile = self.generate_profile(auto_save=False)  # 避免无限递归
         
         if output_path is None:
             output_path = self.agent_dir / 'cognitive_profile.json'

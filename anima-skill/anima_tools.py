@@ -178,8 +178,9 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     # 写入记忆（简化实现：追加到今日文件）
     fact_id = _write_memory_simple(content, type, tags, agent_name)
     
-    # 记录 EXP
-    dimension = "internalization" if type == "episodic" else "creation"
+    # 记录 EXP（使用 core 层的维度命名）
+    # core 维度名：understanding, application, creation, metacognition, collaboration
+    dimension = "understanding" if type == "episodic" else "creation"
     _add_exp(agent_name, dimension, exp_reward, "memory_write", {
         "type": type,
         "quality": quality,
@@ -730,17 +731,38 @@ def _add_exp(agent_name: str, dimension: str, exp: int, action: str, details: Di
     try:
         # 尝试使用 core 模块
         if ANIMA_HOME.exists():
-            sys.path.insert(0, str(ANIMA_HOME / "core"))
-            from exp_tracker import EXPTracker
-            tracker = EXPTracker(agent_name)
-            tracker.add_exp(dimension, action, exp, details)
+            try:
+                sys.path.insert(0, str(ANIMA_HOME / "core"))
+                from exp_tracker import EXPTracker
+                tracker = EXPTracker(agent_name)
+                success, msg = tracker.add_exp(dimension, action, exp, details)
+                if not success:
+                    # core 记录失败，fallback 到本地文件
+                    _add_exp_fallback(agent_name, dimension, exp, action, details)
+            except ImportError as e:
+                # core 模块导入失败，使用 fallback
+                _add_exp_fallback(agent_name, dimension, exp, action, details)
+            except Exception as e:
+                # core 其他错误，记录日志并 fallback
+                _log_exp_error(agent_name, e)
+                _add_exp_fallback(agent_name, dimension, exp, action, details)
         else:
-            # core 未安装时，记录到本地文件（降级方案）
+            # core 未安装，直接使用 fallback
             _add_exp_fallback(agent_name, dimension, exp, action, details)
     except Exception as e:
-        # 记录错误但不影响主流程
-        # print(f"EXP 记录失败：{e}")
-        pass
+        # 所有方法都失败，记录错误日志
+        _log_exp_error(agent_name, e)
+
+
+def _log_exp_error(agent_name: str, error: Exception):
+    """记录 EXP 错误日志"""
+    try:
+        log_file = WORKSPACE / "anima_exp_errors.log"
+        timestamp = datetime.now().isoformat()
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] EXP 记录失败 - Agent: {agent_name}, 错误：{error}\n")
+    except:
+        pass  # 日志记录失败也不影响主流程
 
 
 def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, details: Dict):

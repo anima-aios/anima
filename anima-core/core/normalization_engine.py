@@ -238,38 +238,24 @@ class NormalizationEngine:
     
     def score_to_level(self, cognitive_score: float) -> Dict:
         """
-        将认知分数映射到等级（基于 Dreyfus 模型 + 细分等级）
+        将认知分数映射到等级（已废弃）
         
-        每个大阶段内部分细级，更公平地反映成长差异：
-        - Novice (0-39 分): Lv.20-38，每 2 分升 1 级
-        - Advanced Beginner (40-59 分): Lv.40-58
-        - Competent (60-79 分): Lv.60-78
-        - Proficient (80-89 分): Lv.80-88
-        - Expert (90-100 分): Lv.90-100
+        ⚠️ 注意：此方法已废弃！请使用 level_system.py 中的等级系统。
         
-        Args:
-            cognitive_score: 综合认知分数（0-100）
+        原因：
+        - 与 level_system.py 的 EXP 累计等级系统冲突
+        - 导致同一用户有两个等级值
+        - 统一使用 level_system.py 的 level = int(exp ^ 0.28) 公式
         
         Returns:
             {'level': int, 'stage': str, 'badge': str}
+        
+        Deprecated:
+            请使用 level_system.py 的 LevelSystem.get_level_info()
         """
-        # 细分等级，让成长更公平可见
-        if cognitive_score >= 90:
-            level = 90 + int((cognitive_score - 90) / 2)
-            return {'level': min(level, 100), 'stage': 'Expert 专家', 'badge': '👑 Legendary'}
-        elif cognitive_score >= 80:
-            level = 80 + int((cognitive_score - 80) / 2)
-            return {'level': min(level, 88), 'stage': 'Proficient 熟练者', 'badge': '🏆 Master'}
-        elif cognitive_score >= 60:
-            level = 60 + int((cognitive_score - 60) / 2)
-            return {'level': min(level, 78), 'stage': 'Competent 胜任者', 'badge': '🌳 Expert'}
-        elif cognitive_score >= 40:
-            level = 40 + int((cognitive_score - 40) / 2)
-            return {'level': min(level, 58), 'stage': 'Advanced Beginner 高级初学者', 'badge': '🌿 Advanced'}
-        else:
-            # Novice 阶段：0-39 分 → Lv.20-38
-            level = 20 + int(cognitive_score / 2)
-            return {'level': min(level, 38), 'stage': 'Novice 新手', 'badge': '🌱 Novice'}
+        # 此方法已废弃，仅保留用于向后兼容
+        # 实际等级计算应使用 level_system.py
+        return {'level': 0, 'stage': 'Deprecated', 'badge': '⚠️ 已废弃'}
     
     def get_dimension_stage(self, dimension: str, score: float) -> str:
         """
