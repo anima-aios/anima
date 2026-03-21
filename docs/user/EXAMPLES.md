@@ -334,7 +334,7 @@ Anima: 📊 创造维度分析
 A: 首次使用需要安装 anima-core 核心系统
 
 运行以下命令：
-bash ~/.openclaw/workspace-shuheng/projects/anima/anima-skill/post-install.sh
+bash ~/.openclaw/workspace/projects/anima/anima-skill/post-install.sh
 
 或手动安装：
 git clone https://github.com/anima-aios/anima.git /tmp/anima

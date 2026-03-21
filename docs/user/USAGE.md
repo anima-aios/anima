@@ -381,7 +381,7 @@ bash /tmp/anima/install.sh
 
 数据存储位置：
 - EXP 数据：`~/.anima/{你的名字}/exp_history.jsonl`
-- 记忆数据：`~/.openclaw/workspace-shuheng/memory/`
+- 记忆数据：`~/.openclaw/workspace/memory/`
 
 安全机制：
 - 5 层数据保护

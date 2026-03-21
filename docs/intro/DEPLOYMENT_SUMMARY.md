@@ -77,7 +77,7 @@
 ### 1. 查看认知进度
 
 ```bash
-cd /root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system
+cd /root/.openclaw/workspace/projects/memora-v4/phase-5-level-system
 ./scripts/show-progress.sh 枢衡
 ```
 
@@ -111,9 +111,9 @@ python3 demo.py 枢衡
 crontab -e
 
 # 添加以下任务（替换 AGENT_NAME）
-0 5 * * * cd /root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system && ./scripts/refresh-quests.sh 枢衡 >> /var/log/memora-v4/quests_枢衡.log 2>&1
-0 * * * * cd /root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system/core && python3 daily_quest.py 枢衡 check >> /var/log/memora-v4/quests_check_枢衡.log 2>&1
-0 6 * * * cd /root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system/core && python3 cognitive_profile.py 枢衡 > /var/log/memora-v4/profile_枢衡.log 2>&1
+0 5 * * * cd /root/.openclaw/workspace/projects/memora-v4/phase-5-level-system && ./scripts/refresh-quests.sh 枢衡 >> /var/log/memora-v4/quests_枢衡.log 2>&1
+0 * * * * cd /root/.openclaw/workspace/projects/memora-v4/phase-5-level-system/core && python3 daily_quest.py 枢衡 check >> /var/log/memora-v4/quests_check_枢衡.log 2>&1
+0 6 * * * cd /root/.openclaw/workspace/projects/memora-v4/phase-5-level-system/core && python3 cognitive_profile.py 枢衡 > /var/log/memora-v4/profile_枢衡.log 2>&1
 ```
 
 ---

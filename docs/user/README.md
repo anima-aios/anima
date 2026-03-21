@@ -88,7 +88,7 @@ ls -la ~/.anima/
 ### 步骤 3：安装 skill
 
 ```bash
-cd ~/.openclaw/workspace-shuheng/skills/
+cd ~/.openclaw/workspace/skills/
 ln -s ../../projects/anima/anima-skill anima
 ```
 
@@ -191,10 +191,10 @@ chown -R $USER:$USER ~/.anima
 **检查：**
 ```bash
 # 确认 skill 文件存在
-ls -la ~/.openclaw/workspace-shuheng/skills/anima/
+ls -la ~/.openclaw/workspace/skills/anima/
 
 # 确认 _meta.json 格式正确
-cat ~/.openclaw/workspace-shuheng/skills/anima/_meta.json | python3 -m json.tool
+cat ~/.openclaw/workspace/skills/anima/_meta.json | python3 -m json.tool
 
 # 重启 OpenClaw Gateway
 openclaw gateway restart
@@ -212,7 +212,7 @@ ls ~/.anima/core/
 # 应该看到：exp_tracker.py, cognitive_profile.py, daily_quest.py 等
 
 # 2. 检查 skill 目录
-ls ~/.openclaw/workspace-shuheng/skills/anima/
+ls ~/.openclaw/workspace/skills/anima/
 # 应该看到：SKILL.md, _meta.json, post-install.sh
 
 # 3. 测试 Python 导入
@@ -241,7 +241,7 @@ git pull origin main
 bash install.sh
 
 # 更新 skill
-cd ~/.openclaw/workspace-shuheng/skills/anima
+cd ~/.openclaw/workspace/skills/anima
 git pull origin main
 
 # 重启 OpenClaw

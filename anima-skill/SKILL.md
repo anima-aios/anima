@@ -32,7 +32,7 @@ bash /tmp/anima/install.sh
 rm -rf /tmp/anima
 
 # 2. 安装 skill
-cd ~/.openclaw/workspace-shuheng/skills/
+cd ~/.openclaw/workspace/skills/
 ln -s ../../projects/anima/anima-skill anima
 ```
 
@@ -453,7 +453,7 @@ anima-skill/
 
 | 数据类型 | 位置 | 删除权限 |
 |----------|------|----------|
-| facts/ | ~/.openclaw/workspace-shuheng/memory/ | 立文 + 枢衡 |
+| facts/ | ~/.openclaw/workspace/memory/ | 立文 + 枢衡 |
 | cognitive_profile.json | ~/.anima/ | 立文 + 枢衡 |
 | exp_history.jsonl | ~/.anima/ | 立文 + 枢衡 |
 

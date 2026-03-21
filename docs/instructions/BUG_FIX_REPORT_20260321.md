@@ -497,7 +497,7 @@ def _get_current_agent() -> str:
 ```python
 # 3 套路径系统混用
 ANIMA_HOME = Path(os.path.expanduser("~/.anima"))
-WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
+WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace"))
 FACTS_BASE = "/home/画像"  # 硬编码
 ```
 
@@ -510,7 +510,7 @@ FACTS_BASE = "/home/画像"  # 硬编码
 ```python
 # 统一路径配置为环境变量
 ANIMA_HOME = Path(os.getenv("ANIMA_HOME", os.path.expanduser("~/.anima")))
-WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace-shuheng")))
+WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
 FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", "/home/画像"))
 
 # 所有路径使用配置变量

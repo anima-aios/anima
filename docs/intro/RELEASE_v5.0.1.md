@@ -77,7 +77,7 @@
 pkill -f "vega-watcher"
 
 # 重新安装
-cd /root/.openclaw/workspace-shuheng/projects/anima
+cd /root/.openclaw/workspace/projects/anima
 bash install.sh
 
 # 重启 Vega
@@ -87,7 +87,7 @@ nohup vega-watcher 你的 Agent 名称 > /dev/null 2>&1 &
 ### 方式 2：Git 升级
 
 ```bash
-cd /root/.openclaw/workspace-shuheng/projects/anima
+cd /root/.openclaw/workspace/projects/anima
 git pull origin main
 
 # 重启服务
@@ -101,7 +101,7 @@ nohup vega-watcher 你的 Agent 名称 > /dev/null 2>&1 &
 
 ```bash
 # 1. 检查版本
-cd /root/.openclaw/workspace-shuheng/projects/anima
+cd /root/.openclaw/workspace/projects/anima
 git log -1 --oneline
 
 # 2. 运行测试

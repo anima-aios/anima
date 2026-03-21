@@ -10,7 +10,7 @@
 
 Anima 存在两套记忆系统：
 
-1. **OpenClaw 记忆** - `/root/.openclaw/workspace-shuheng/memory/`
+1. **OpenClaw 记忆** - `/root/.openclaw/workspace/memory/`
    - OpenClaw 默认记忆路径
    - 所有 Agent 共享
 
@@ -97,16 +97,16 @@ sync_memory_on_startup("枢衡")
 **手动同步：**
 ```bash
 # 同步所有 Agent
-/root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh
+/root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh
 
 # 同步指定 Agent
-/root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
+/root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
 ```
 
 **自动同步（可选）：**
 ```bash
 # 添加到 crontab（每小时同步一次）
-0 * * * * /root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh
+0 * * * * /root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh
 ```
 
 ---
@@ -115,7 +115,7 @@ sync_memory_on_startup("枢衡")
 
 **检查记忆同步状态：**
 ```bash
-cd /root/.openclaw/workspace-shuheng/projects/anima/anima-skill
+cd /root/.openclaw/workspace/projects/anima/anima-skill
 python3 anima_doctor.py
 ```
 
@@ -133,7 +133,7 @@ python3 anima_doctor.py
 **修复建议：**
 ```bash
 # 运行同步脚本
-/root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
+/root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
 
 # 或重新写入记忆
 # 写记忆时会自动同步
@@ -166,7 +166,7 @@ python3 anima_doctor.py
 **解决方案：**
 ```bash
 # 1. 手动同步
-/root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
+/root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
 
 # 2. 检查权限
 chmod -R 755 /home/画像/枢衡/memory
@@ -194,7 +194,7 @@ mkdir -p /home/画像/枢衡/memory
 chmod -R 755 /home/画像/枢衡/memory
 
 # 3. 重新运行
-/root/.openclaw/workspace-shuheng/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
+/root/.openclaw/workspace/projects/anima/anima-core/scripts/sync-memory.sh 枢衡
 ```
 
 ---

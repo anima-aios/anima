@@ -220,8 +220,8 @@ memora-v4/phase-5-level-system/
 ## 📞 联系方式
 
 - **项目负责人：** 枢衡
-- **Git 仓库：** /root/.openclaw/workspace-shuheng/projects/memora-v4
-- **文档位置：** /root/.openclaw/workspace-shuheng/projects/memora-v4/phase-5-level-system/README.md
+- **Git 仓库：** /root/.openclaw/workspace/projects/memora-v4
+- **文档位置：** /root/.openclaw/workspace/projects/memora-v4/phase-5-level-system/README.md
 
 ---
 

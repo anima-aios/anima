@@ -148,7 +148,7 @@ logger.info(f"记忆已同步：{agent_name}/{today}.md")
 
 **当前：**
 ```python
-WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
+WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace"))
 PORTRAIT_BASE = Path("/home/画像")
 ```
 
