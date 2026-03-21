@@ -1,10 +1,26 @@
 {
   "name": "anima",
   "version": "5.0.0",
-  "description": "Anima-AIOS 个人智能操作系统",
+  "description": "Anima-AIOS 认知操作系统 - 让成长可见，让认知可量",
   "author": "枢衡 <shuheng@anima-aios.com>",
   "repository": "https://github.com/anima-aios/anima",
   "license": "MIT",
-  "keywords": ["aios", "memory", "exp", "quest", "normalization"],
-  "main": "SKILL.md"
+  "keywords": ["aios", "memory", "exp", "quest", "normalization", "cognitive", "growth"],
+  "main": "SKILL.md",
+  "scripts": {
+    "postinstall": "bash post-install.sh"
+  },
+  "requirements": {
+    "system": ["python3 (>=3.8)", "git"],
+    "pip": ["pytest (optional)", "requests (optional)"]
+  },
+  "features": [
+    "记忆管理 v2（语义检索 + EXP 奖励）",
+    "认知画像（五维评估 + 等级系统）",
+    "每日任务（游戏化成长）",
+    "团队归一化（公平比较）",
+    "数据保护（5 层安全机制）"
+  ],
+  "dataDirectory": "~/.anima",
+  "autoInstall": true
 }
