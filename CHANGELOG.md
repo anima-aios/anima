@@ -1,147 +1,80 @@
-# Anima-AIOS 变更日志
+# Changelog
 
-所有重要的项目变更都会记录在此文件中。
+All notable changes to this project will be documented in this file.
 
----
+## [Unreleased]
 
-## [5.0.0] - 2026-03-21
-
-### ✨ 重大更新
-
-**品牌升级：Memora → Anima-AIOS**
-
-- **Anima** - 拉丁语"灵魂"
-- **AIOS** - AI Operating System（AI 操作系统）
-- **Slogan:** "Making Growth Visible, Making Cognition Measurable"
-
-### 🌍 国际化
-
-- ✅ GitHub 仓库：https://github.com/anima-aios/anima
-- ✅ 中英双语文档
-- ✅ MIT 许可证
-
-### 📝 新增文档
-
-- `README_ANIMA.md` - 新 README
-- `BRAND_MIGRATION.md` - 品牌升级指南
-- `RELEASE_v5.0.0.md` - v5.0.0 发布说明
-- `LICENSE` - MIT 许可证
-
-### 🔄 升级说明
-
-- 现有用户无需重新安装
-- 数据完全兼容
-- 功能无变化
+### Planned
+- v5.1.0: 成就徽章系统
+- v5.2.0: 周期性挑战
 
 ---
 
-## [4.0.5] - 2026-03-20 20:45
+## [skill-v5.0.1] - 2026-03-21
 
-### 🔧 修正
-- **Session 扫描不完整** - 包含 deleted session 文件（完整历史记录）
-- **日安数据修正** - Lv.6 → Lv.10（主 Agent，影响大）
-- **所有 Agent 数据更新** - 更准确的初始等级
+### Fixed
+- **Bug 001**: 维度名称不一致 - 统一使用 `understanding`
+- **Bug 002**: EXP 记录静默失败 - 添加具体异常处理和错误日志
+- **Bug 005**: 去重检测未实现 - 基于内容哈希检查最近 10 条记忆
+- **Bug 008**: 静默失败过多 - 修复 4 处 bare except
+- **Bug 009**: 硬编码 Agent 名称 - 从环境变量 `ANIMA_AGENT_NAME` 获取
+- **Bug 010**: 路径配置混乱 - 统一为 `ANIMA_WORKSPACE` 和 `ANIMA_FACTS_BASE`
 
-### 📊 数据变化
-| Agent | v4.0.4 | v4.0.5 | 变化 |
-|-------|--------|--------|------|
-| 日安 | Lv.6 | **Lv.10** | +4 级 |
-| 枢衡 | Lv.9 | **Lv.10** | +1 级 |
-| 星澜 | Lv.8 | **Lv.9** | +1 级 |
-| 白墨 | Lv.5 | **Lv.7** | +2 级 |
-| 糖豆 | Lv.5 | **Lv.7** | +2 级 |
-| 流萤 | Lv.4 | **Lv.5** | +1 级 |
-| 明澈 | Lv.3 | **Lv.4** | +1 级 |
-| 瑾瑜 | Lv.3 | **Lv.4** | +1 级 |
+### Changed
+- 质量系数逻辑优化 - 基础 EXP 和质量奖励分开计算
 
 ---
 
-## [4.0.4] - 2026-03-20 20:35
+## [core-v5.1] - 2026-03-21
 
-### ✨ 新增
-- **Session 扫描器** - 自动扫描 OpenClaw session 记录
-- **初始等级计算** - 根据历史对话计算 EXP
-- **Agent 名称映射** - 英文目录名 → 中文名称
+### Fixed
+- **Bug 003**: 两套等级系统冲突 - 废弃 `normalization_engine.py` 的等级计算
+- **Bug 004**: 画像文件不实时更新 - 查询时自动保存
+- **Bug 006**: 质量系数逻辑 - 基础 EXP 计入上限，质量奖励作为额外奖励
+- **Bug 007**: 权重配置未落地 - creation 维度 EXP 提升 20-25%
 
-### 📊 功能
-- 扫描 `/root/.openclaw/agents/{agent}/sessions/` 目录
-- 包括主 Agent（main 目录 → 日安）
-- EXP 计算规则：
-  - 每条 session: +1 EXP
-  - 每次 toolCall: +1 EXP
-  - write 工具：+2 EXP
-  - read 工具：+0.5 EXP
-  - exec 工具：+1 EXP
-  - assistant 消息：+0.5 EXP
+### Changed
+- `normalization_engine.py:score_to_level()` 标记为已废弃
+- `cognitive_profile.py:generate_profile()` 添加 `auto_save` 参数
+- `dimension_calculator.py` 按权重调整 EXP 获取规则
+
+### Deprecated
+- `normalization_engine.py:score_to_level()` - 请使用 `level_system.py`
 
 ---
 
-## [4.0.3] - 2026-03-20 20:00
+## [skill-v5.0.0] - 2026-03-21
 
-### ✨ 新增
-- **等级系统** - 独立等级系统模块（level_system.py）
-- **累积制 EXP** - EXP 只增不减，等级只升不降
-- **慢升级曲线** - level = int(exp ^ 0.28)
+### Added
+- 游戏化成长系统
+- 9 个核心工具（memory_search_v2, memory_write_v2, get_cognitive_profile 等）
+- 每日任务系统
+- 团队排行榜
+- 质量评估系统（S/A/B/C 四级）
+- 自动安装脚本（post-install.sh）
+- 降级模式（core 未安装时仍可用基础功能）
 
-### 📊 等级公式
-- 2 EXP → Lv.1（新手起步）
-- 100 EXP → Lv.3（第 1 天）
-- 1000 EXP → Lv.6（第 1 周）
-- 1 万 EXP → Lv.13（第 1 月）
-- 10 万 EXP → Lv.25（第 1 年）
-- 1400 万 EXP → Lv.100（终身成就）
-
----
-
-## [4.0.2] - 2026-03-20 19:28
-
-### ✨ 优化
-- **等级映射优化** - 每个大阶段内细分等级
-- **更公平的等级** - 0-39 分：Lv.20-38（每 2 分升 1 级）
+### Changed
+- 品牌升级：Memora → Anima-AIOS
 
 ---
 
-## [4.0.1] - 2026-03-20 19:26
+## [core-v5.0] - 2026-03-21
 
-### 🐛 修复
-- **JSON 格式支持** - dimension_calculator.py 支持.json 格式
-- **统计数据修复** - get_statistics() 支持递归子目录
-- **认知分数修正** - 正确计算所有 Agent 的分数
+### Added
+- EXP 追踪器（多维度 + 每日限额）
+- 认知画像生成器（五维评估）
+- 等级系统（累积 EXP 公式）
+- 归一化引擎（团队公平比较）
+- 每日任务系统（智能生成）
+- 数据保护（5 层机制）
 
-### 📊 修复后数据
-- 日安：44 条 facts，认知分数 21.00
-- 枢衡：17 条 facts，认知分数 19.00
-- 糖豆：7 条 facts，认知分数 5.00
-
----
-
-## [4.0.0] - 2026-03-20 16:00
-
-### ✨ 首发版本
-
-#### 核心功能
-- **五维认知评估** - 内化/应用/创造/元认知/协作
-- **累积制等级系统** - EXP 只增不减
-- **自动团队扫描** - 自动感知团队变化
-- **纯文本可视化** - 潜移默化，不浮夸
-- **每日任务系统** - 4 个通用任务
-- **数据保护机制** - 5 层保护
-
-#### 交付内容
-- 9 个核心模块
-- 8 个脚本工具
-- 30 个测试用例（100% 通过）
-- 16 个文档
+### Changed
+- 品牌升级：Memora → Anima-AIOS
+- 目录统一：anima/, anima-core/, anima-skill/
 
 ---
 
-## 版本命名规则
-
-- **v4.x.0** - 重大功能更新
-- **v4.x.1** - Bug 修复
-- **v4.x.2** - 优化改进
-- **v4.x.3+** - 数据修正
-
----
-
-**最后更新：** 2026-03-20 20:45
+**版本：** v5.0.1 (skill) / v5.1 (core)  
+**发布日期：** 2026-03-21  
+**GitHub:** https://github.com/anima-aios/anima
