@@ -3,3 +3,4 @@ __pycache__/
 *.bak
 *.bak.*
 .DS_Store
+test-integration.py

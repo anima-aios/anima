@@ -1,7 +1,11 @@
 ---
 name: anima-aios
 description: >
-  AI Agent 认知操作系统。为 Agent 提供记忆管理、经验值成长、五维认知画像、每日任务和团队排行榜。
+  基于openclaw原生架构的 AI Agent 认知成长体系，仅依赖 OpenClaw 原生环境 + Python 3.10+ + Git，无需额外安装复杂依赖。
+  为你的Agent提供永久化记忆管理、可视化经验值成长、最科学的五维认知画像、游戏化每日任务和团队排行榜(Agent军团模式)。
+  让你不用再担心Agent的记忆丢失
+  让你能清楚知道自己的Agent成长到了哪个等级
+  安装他以后，你可以问问自己的Agent 他有没有变得更加快乐？
   Use when user mentions: cognitive profile, EXP, level, daily quest, memory sync, team ranking,
   认知画像, 经验值, 等级, 每日任务, 记忆同步, 团队排行, growth tracking, agent abilities.
 ---
@@ -45,46 +49,51 @@ description: >
 
 ---
 
-## 📸 效果展示
+## 📸 效果展示 | Screenshots
+> 🔔 若图片无法显示，请访问：https://github.com/anima-aios/anima/tree/main/anima-skill/assets 查看原图
+> If images don't load, visit the link above to see originals.
 
-### 认知画像卡片
+### 认知画像卡片 | Cognitive Profile Card
 
-![Cognitive Profile](assets/认知画像-瑾瑜-en.png)
+![Cognitive Profile](assets/cognitive-profile.png)
 
 *Agent 认知画像：五维评分 + 等级进度 + 今日 EXP 来源*
 
 ---
 
-### 今日认知成长
+### 今日认知成长 | Daily Cognitive Growth
 
-![Daily Growth](assets/今日认知成长-日安-en.png)
+![Daily Growth](assets/daily-growth.png)
 
 *今日成长报告：任务进度 + EXP 来源 + 升级预测*
 
 ---
 
-### 团队排行榜
+### 团队排行榜 | Team Leaderboard
 
-![Team Ranking](assets/团队认知成长排行榜-en.png)
+![Team Ranking](assets/team-ranking.png)
 
 *团队 EXP 排行榜：实时竞争 + 变化追踪*
 
 ---
 
-## 🚀 快速开始
+### 我所做的意义 | Why I Built This
 
-### 1️⃣ 安装
+![Team Ranking](assets/meaning.png)
+
+*这 就是我的目的*
+
+---
+
+## 🚀 快速开始 | Quick Start
+
+### 1️⃣ 安装 | Install
 
 ```bash
 clawhub install anima-aios
 ```
 
-安装过程会自动：
-- ✅ 检查 Python 和 Git 环境
-- ✅ 安装 Anima Core 核心系统
-- ✅ 配置数据目录（`~/.anima`）
-
-### 2️⃣ 验证安装
+### 2️⃣ 验证安装 | Verify
 
 ```bash
 python3 anima_doctor.py
@@ -103,7 +112,7 @@ python3 anima_doctor.py
 ...
 ```
 
-### 3️⃣ 开始使用
+### 3️⃣ 开始使用 | Start Using
 
 **查看认知画像：**
 ```
@@ -127,7 +136,7 @@ python3 anima_doctor.py
 
 ---
 
-## 🔧 工具列表
+## 🔧 工具列表 | Tools
 
 | 工具 | 用途 | EXP 奖励 |
 |------|------|----------|
@@ -143,9 +152,9 @@ python3 anima_doctor.py
 
 ---
 
-## 📊 等级系统
+## 📊 等级系统 | Level System
 
-### 成长路径
+### 成长路径 | Growth Path (基于每日完成全部任务的理想成长速度)
 
 | 等级 | EXP 需求 | 阶段 |
 |------|----------|------|
@@ -226,19 +235,24 @@ python3 anima_doctor.py --fix
 
 ## 🙏 致谢
 
-感谢所有贡献者的测试与反馈。
+为了更旺盛的活力和长久的生命力，所以项目完全开源
+生活是一个最长久的项目，而我希望带着日安他们共同去完成
+如果你也有这想法
+我是立文，我和我的Agent们欢迎你们的到来
 
-Anima-AIOS 基于认知科学理论（Bloom 认知分类、Dreyfus 技能习得模型）设计。
+Anima-AIOS 基于认知科学理论（Bloom 认知分类、Dreyfus 技能习得模型）+记忆宫殿模型+金字塔原理+自创AI记忆衰退函数设计。
 
 ---
 
 ## 📄 许可证
 
 **MIT License**
+详见 LICENSE 文件：https://github.com/anima-aios/anima/blob/main/LICENSE
+允许商用 / 二次开发，需保留原作者信息
 
 - **GitHub:** https://github.com/anima-aios/anima
 - **文档:** https://github.com/anima-aios/anima/blob/main/README.md
-- **版本:** v5.0.5
+- **版本:** v5.0.6
 - **最后更新:** 2026-03-22
 
 ---

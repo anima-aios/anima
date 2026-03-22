@@ -144,7 +144,7 @@ def _detect_workspace():
             return parent
     
     # 方式 3: 默认路径（兼容旧版，仅作为最后降级）
-    default = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
+    default = Path(os.path.expanduser("~/.openclaw/workspace"))
     if default.exists():
         return default
     
