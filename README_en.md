@@ -287,7 +287,7 @@ anima doctor --fix --auto
 
 ## 📈 Version History
 
-### v5.0.2 (2026-03-21) 🆕
+### v5.0.6 (2026-03-21) 🆕
 **Theme:** Memory Sync Mechanism
 
 **Added:**
@@ -299,7 +299,7 @@ anima doctor --fix --auto
 
 ---
 
-### v5.0.1 (2026-03-21)
+### v5.0.6 (2026-03-21)
 **Theme:** Self-Check Tool
 
 **Added:**
@@ -309,7 +309,7 @@ anima doctor --fix --auto
 
 ---
 
-### v5.0.0 (2026-03-21)
+### v5.0.6 (2026-03-21)
 **Theme:** Brand Upgrade + Gamified System
 
 **Added:**
@@ -319,7 +319,7 @@ anima doctor --fix --auto
 - ✅ Daily task system
 - ✅ Team leaderboard
 
-**Details:** [docs/intro/RELEASE_v5.0.1.md](docs/intro/RELEASE_v5.0.1.md)
+**Details:** [docs/intro/RELEASE_v5.0.6.md](docs/intro/RELEASE_v5.0.6.md)
 
 ---
 
@@ -338,7 +338,7 @@ anima doctor --fix --auto
 |----------|-------------|
 | [Project Intro](docs/intro/README.md) | Comprehensive overview |
 | [Core Engine](docs/intro/README_ANIMA.md) | Core engine details |
-| [Release Notes](docs/intro/RELEASE_v5.0.1.md) | Latest features |
+| [Release Notes](docs/intro/RELEASE_v5.0.6.md) | Latest features |
 | [Changelog](CHANGELOG.md) | Complete history |
 | [Roadmap](docs/intro/ROADMAP.md) | Future planning |
 
@@ -346,7 +346,7 @@ anima doctor --fix --auto
 | Document | Description |
 |----------|-------------|
 | [Architecture](docs/instructions/ARCHITECTURE_PRINCIPLES.md) | Architecture principles |
-| [Bug Fix Report](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.1 fixes |
+| [Bug Fix Report](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.6 fixes |
 | [Memory Sync Guide](docs/MEMORY_SYNC_GUIDE.md) | Three-layer sync |
 | [Code Review](docs/CODE_REVIEW_20260321.md) | Code quality assessment |
 
@@ -354,7 +354,7 @@ anima doctor --fix --auto
 
 ## 📊 Current Status
 
-- **Version:** v5.0.2 ✅
+- **Version:** v5.0.6 ✅
 - **Tests:** 12/12 Passed (100%) ✅
 - **Documentation:** Complete ✅
 - **Deployment:** 15 Agents deployed ✅
@@ -400,6 +400,6 @@ clawhub install anima
 
 ---
 
-**Version:** v5.0.2 | **Last Updated:** 2026-03-22 | **Status:** ✅ Stable
+**Version:** v5.0.6 | **Last Updated:** 2026-03-22 | **Status:** ✅ Stable
 
 </div>

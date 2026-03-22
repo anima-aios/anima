@@ -296,7 +296,7 @@ anima doctor --fix --auto
 
 ## 📈 版本迭代历史
 
-### v5.0.2（2026-03-21）🆕
+### v5.0.6（2026-03-21）🆕
 **主题：** 记忆同步机制
 
 **新增：**
@@ -308,7 +308,7 @@ anima doctor --fix --auto
 
 ---
 
-### v5.0.1（2026-03-21）
+### v5.0.6（2026-03-21）
 **主题：** 自检自修工具
 
 **新增：**
@@ -318,7 +318,7 @@ anima doctor --fix --auto
 
 ---
 
-### v5.0.0（2026-03-21）
+### v5.0.6（2026-03-21）
 **主题：** 品牌升级 + 游戏化系统
 
 **新增：**
@@ -328,7 +328,7 @@ anima doctor --fix --auto
 - ✅ 每日任务系统
 - ✅ 团队排行榜
 
-**详情：** [docs/intro/RELEASE_v5.0.1.md](docs/intro/RELEASE_v5.0.1.md)
+**详情：** [docs/intro/RELEASE_v5.0.6.md](docs/intro/RELEASE_v5.0.6.md)
 
 ---
 
@@ -347,7 +347,7 @@ anima doctor --fix --auto
 |------|------|
 | [项目主介绍](docs/intro/README.md) | 全面了解 Anima |
 | [Core 引擎介绍](docs/intro/README_ANIMA.md) | 核心引擎详解 |
-| [发布说明](docs/intro/RELEASE_v5.0.1.md) | 最新版本特性 |
+| [发布说明](docs/intro/RELEASE_v5.0.6.md) | 最新版本特性 |
 | [变更日志](CHANGELOG.md) | 完整变更记录 |
 | [项目路线图](docs/intro/ROADMAP.md) | 未来发展规划 |
 
@@ -355,7 +355,7 @@ anima doctor --fix --auto
 | 文档 | 说明 |
 |------|------|
 | [架构原则](docs/instructions/ARCHITECTURE_PRINCIPLES.md) | 架构设计规范 |
-| [Bug 修复报告](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.1 修复详情 |
+| [Bug 修复报告](docs/instructions/BUG_FIX_REPORT_20260321.md) | v5.0.6 修复详情 |
 | [记忆同步指南](docs/MEMORY_SYNC_GUIDE.md) | 三层同步机制详解 |
 | [代码审查报告](docs/CODE_REVIEW_20260321.md) | 代码质量评估 |
 
@@ -363,7 +363,7 @@ anima doctor --fix --auto
 
 ## 📊 当前状态
 
-- **版本：** v5.0.2 ✅
+- **版本：** v5.0.6 ✅
 - **测试：** 12/12 通过 (100%) ✅
 - **文档：** 完整 ✅
 - **部署：** 15 个 Agent 已部署 ✅
@@ -411,6 +411,6 @@ clawhub install anima
 
 ---
 
-**版本：** v5.0.2 | **最后更新：** 2026-03-22 | **状态：** ✅ 稳定
+**版本：** v5.0.6 | **最后更新：** 2026-03-22 | **状态：** ✅ 稳定
 
 </div>

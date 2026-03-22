@@ -218,7 +218,7 @@ python3 anima_doctor.py --fix
 
 ## 📝 版本历史
 
-**当前版本：** v5.0.5 (2026-03-22)
+**当前版本：** v5.0.6 (2026-03-22)
 
 完整变更记录参见 [references/changelog.md](references/changelog.md)
 

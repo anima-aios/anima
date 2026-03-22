@@ -199,9 +199,11 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     # ========== 第 2 层：写入 Anima Facts (v5.0.3 新增) ==========
     fact_id = _write_anima_fact(content, type, tags, agent_name)
     
-    # ========== 第 3 层：记录 EXP (v5.0.3 修复) ==========
-    # 统一维度命名：understanding (原 internalization)
-    dimension = "understanding"
+    # ========== 第 3 层：记录 EXP (v5.0.5 修复) ==========
+    # 维度分配规则：
+    # - episodic（经历记忆）→ understanding（知识内化）
+    # - semantic（知识记忆）→ creation（知识创造）
+    dimension = "understanding" if type == "episodic" else "creation"
     _add_exp(agent_name, dimension, base_exp, "memory_write", {
         "type": type,
         "quality": quality,
@@ -697,9 +699,20 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
             # 保存
             _save_quests(quests, quest_file)
             
-            # 奖励 EXP
+            # 奖励 EXP（根据任务类型分配维度）
             exp_reward = quest["expReward"]
-            _add_exp(agent_name, "application", exp_reward, "quest_complete", {
+            # 维度分配：根据任务难度和类型
+            quest_dimension_map = {
+                "写一条记忆": "understanding",
+                "搜索记忆 3 次": "application",
+                "完成一次代码提交": "creation",
+                "写工作日志": "metacognition",
+                "分享知识到团队": "collaboration",
+                "代码审查": "collaboration",
+                "写技术文档": "creation",
+            }
+            dimension = quest_dimension_map.get(quest["title"], "application")
+            _add_exp(agent_name, dimension, exp_reward, "quest_complete", {
                 "quest_id": quest_id,
                 "quest_title": quest["title"]
             })
