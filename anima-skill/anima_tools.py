@@ -20,7 +20,7 @@ OpenClaw Skill 工具实现
   - Bug 2: 只写入第 1 层 → 新增第 2 层 Anima Facts 同步
   - Bug 3: 维度命名不一致 → 统一使用 core 标准维度名
 
-Author: 枢衡
+Author: Anima-AIOS Team
 Date: 2026-03-22
 Version: 5.0.3
 """
@@ -380,7 +380,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
     
     Returns:
         {
-            "agent": "枢衡",
+            "agent": "YourAgent",
             "level": 10,
             "exp": 5060,
             "nextLevelExp": 6400,
@@ -778,7 +778,7 @@ def get_team_ranking(team_name: str = "all") -> Dict:
         {
             "team": "all",
             "rankings": [
-                {"rank": 1, "agent": "枢衡", "level": 10, "exp": 5060},
+                {"rank": 1, "agent": "YourAgent", "level": 10, "exp": 5060},
                 ...
             ]
         }
@@ -787,7 +787,8 @@ def get_team_ranking(team_name: str = "all") -> Dict:
     agents_exp = []
     
     # 已知 Agent 列表
-    known_agents = ["枢衡", "日安", "星澜", "明澈", "流萤", "正言", "瑾瑜", "糖豆", "青衫", "白墨"]
+    # 动态扫描 Agent（不硬编码）
+    known_agents = [d.name for d in FACTS_BASE.iterdir() if d.is_dir() and (d / "exp_history.jsonl").exists()]
     
     for agent in known_agents:
         exp_data = _get_exp_simple(agent)
@@ -858,19 +859,8 @@ def normalize_score(raw_score: float, metric_type: str, team_size: int) -> Dict:
 # 辅助函数
 # ============================================================================
 
-# 工作空间名称 → Agent 中文名称映射
-WORKSPACE_AGENT_MAP = {
-    "shuheng": "枢衡",
-    "rian": "日安",
-    "xinglan": "星澜",
-    "mingche": "明澈",
-    "liuying": "流萤",
-    "zhengyan": "正言",
-    "jinyu": "瑾瑜",
-    "tangdou": "糖豆",
-    "qingshan": "青衫",
-    "baimo": "白墨",
-}
+# 工作空间名称 → Agent 名称映射（可自定义，默认为空，优先通过 SOUL.md 检测）
+WORKSPACE_AGENT_MAP = {}
 
 
 def _get_current_agent() -> str:
@@ -947,7 +937,7 @@ def _map_workspace_to_agent(workspace_name: str) -> str:
         workspace_name: 工作空间名称（如 shuheng）
     
     Returns:
-        Agent 中文名称（如 枢衡）
+        Agent 名称
     """
     return WORKSPACE_AGENT_MAP.get(workspace_name, workspace_name)
 
@@ -960,14 +950,14 @@ def _parse_identity_file(file_path: Path) -> Optional[str]:
     ```markdown
     # IDENTITY.md - Who Am I?
     
-    - **Name:** 枢衡 (Shū Héng)
+    - **Name:** MyAgent
     - **Creature:** AI 系统架构师
     ```
     """
     try:
         content = file_path.read_text(encoding="utf-8")
         
-        # 匹配模式：- **Name:** 枢衡 (Shū Héng)
+        # 匹配模式：- **Name:** MyAgent
         match = re.search(r'\*\*Name:\*\*\s*([^(]+)', content)
         if match:
             name = match.group(1).strip()
@@ -986,21 +976,21 @@ def _parse_soul_file(file_path: Path) -> Optional[str]:
     
     示例格式:
     ```markdown
-    # SOUL.md - 枢衡的灵魂
+    # SOUL.md - MyAgent 的灵魂
     
     ## ⚖️ 我是谁
-    **姓名：** 枢衡 (Shū Héng)
+    **姓名：** MyAgent
     ```
     """
     try:
         content = file_path.read_text(encoding="utf-8")
         
-        # 匹配模式 1: # SOUL.md - 枢衡的灵魂
+        # 匹配模式 1: # SOUL.md - MyAgent 的灵魂
         match = re.search(r'#\s*SOUL\.md\s*-\s*(.+) 的', content)
         if match:
             return match.group(1).strip()
         
-        # 匹配模式 2: **姓名：** 枢衡
+        # 匹配模式 2: **姓名：** {Agent名}
         match = re.search(r'\*\*姓名：\*\*\s*([^(]+)', content)
         if match:
             name = match.group(1).strip()
@@ -1109,21 +1099,21 @@ def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, de
 if __name__ == "__main__":
     # 测试工具
     print("测试 memory_search_v2...")
-    result = memory_search_v2("Vega", agent_name="枢衡")
+    result = memory_search_v2("Vega", agent_name="TestAgent")
     print(f"结果：{result}")
     
     print("\n测试 get_exp...")
-    result = get_exp("枢衡")
+    result = get_exp("TestAgent")
     print(f"结果：{result}")
     
     print("\n测试 get_level...")
-    result = get_level("枢衡")
+    result = get_level("TestAgent")
     print(f"结果：{result}")
     
     print("\n测试 quest_daily_status...")
-    result = quest_daily_status("枢衡")
+    result = quest_daily_status("TestAgent")
     print(f"结果：{result}")
     
     print("\n测试 memory_write_v2 (v5.0.3 修复版)...")
-    result = memory_write_v2("测试 3 层同步机制修复", type="episodic", agent_name="枢衡")
+    result = memory_write_v2("测试 3 层同步机制修复", type="episodic", agent_name="TestAgent")
     print(f"结果：{result}")

@@ -25,33 +25,8 @@ from datetime import datetime
 ANIMA_HOME = Path(os.path.expanduser("~/.anima"))
 FACTS_BASE = Path("/home/画像")
 
-# 工作空间名称 → Agent 中文名称映射
-WORKSPACE_AGENT_MAP = {
-    "shuheng": "枢衡",
-    "rian": "日安",
-    "xinglan": "星澜",
-    "mingche": "明澈",
-    "liuying": "流萤",
-    "zhengyan": "正言",
-    "jinyu": "瑾瑜",
-    "tangdou": "糖豆",
-    "qingshan": "青衫",
-    "baimo": "白墨",
-}
-
-# 自动检测当前 workspace（v5.0.5 修复：移除硬编码）
-WORKSPACE_AGENT_MAP = {
-    "shuheng": "枢衡",
-    "rian": "日安",
-    "xinglan": "星澜",
-    "mingche": "明澈",
-    "liuying": "流萤",
-    "zhengyan": "正言",
-    "jinyu": "瑾瑜",
-    "tangdou": "糖豆",
-    "qingshan": "青衫",
-    "baimo": "白墨",
-}
+# 工作空间名称 → Agent 名称映射（可自定义，默认为空，优先通过 SOUL.md 检测）
+WORKSPACE_AGENT_MAP = {}
 
 def _map_workspace_to_agent(workspace_name: str) -> str:
     """
@@ -61,7 +36,7 @@ def _map_workspace_to_agent(workspace_name: str) -> str:
         workspace_name: 工作空间名称（如 shuheng）
     
     Returns:
-        Agent 中文名称（如 枢衡）
+        Agent 名称
     """
     return WORKSPACE_AGENT_MAP.get(workspace_name, workspace_name)
 
@@ -71,21 +46,21 @@ def _parse_soul_file(file_path: Path) -> Optional[str]:
     
     示例格式:
     ```markdown
-    # SOUL.md - 枢衡的灵魂
+    # SOUL.md - MyAgent 的灵魂
     
     ## ⚖️ 我是谁
-    **姓名：** 枢衡 (Shū Héng)
+    **姓名：** MyAgent
     ```
     """
     try:
         content = file_path.read_text(encoding="utf-8")
         
-        # 匹配模式 1: # SOUL.md - 枢衡的灵魂
+        # 匹配模式 1: # SOUL.md - MyAgent 的灵魂
         match = re.search(r'#\s*SOUL\.md\s*-\s*(.+) 的', content)
         if match:
             return match.group(1).strip()
         
-        # 匹配模式 2: **姓名：** 枢衡
+        # 匹配模式 2: **姓名：** {Agent名}
         match = re.search(r'\*\*姓名：\*\*\s*([^(]+)', content)
         if match:
             name = match.group(1).strip()
@@ -104,14 +79,14 @@ def _parse_identity_file(file_path: Path) -> Optional[str]:
     ```markdown
     # IDENTITY.md - Who Am I?
     
-    - **Name:** 枢衡 (Shū Héng)
+    - **Name:** MyAgent
     - **Creature:** AI 系统架构师
     ```
     """
     try:
         content = file_path.read_text(encoding="utf-8")
         
-        # 匹配模式：- **Name:** 枢衡 (Shū Héng)
+        # 匹配模式：- **Name:** MyAgent
         match = re.search(r'\*\*Name:\*\*\s*([^(]+)', content)
         if match:
             name = match.group(1).strip()
@@ -152,7 +127,7 @@ def _detect_workspace():
     return cwd
 
 WORKSPACE = _detect_workspace()
-SKILL_DIR = WORKSPACE / ".openclaw" / "skills" / "anima-aios"
+SKILL_DIR = Path(__file__).parent  # 自动检测，不硬编码
 CORE_DIR = ANIMA_HOME / "core"  # Core 是全局共享的
 
 

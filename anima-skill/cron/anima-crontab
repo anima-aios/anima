@@ -1,0 +1,26 @@
+# Anima-AIOS - Cron 配置模板
+# 用法：
+#   1. 修改 AGENT_NAME 为你的 Agent 名称
+#   2. 修改 ANIMA_SKILL_DIR 为你的 Skill 安装路径
+#   3. crontab anima-crontab
+
+# ========== 配置（请修改）==========
+AGENT_NAME="YourAgentName"
+ANIMA_HOME="$HOME/.anima"
+ANIMA_SKILL_DIR="$HOME/.openclaw/workspace/skills/anima-aios"
+LOG_DIR="/var/log/anima"
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# ========== 每日任务刷新（05:00）==========
+0 5 * * * cd $ANIMA_SKILL_DIR && python3 -c "from anima_tools import quest_daily_status; quest_daily_status('$AGENT_NAME')" >> $LOG_DIR/quests.log 2>&1
+
+# ========== 认知画像生成（06:00）==========
+0 6 * * * cd $ANIMA_HOME/core && python3 cognitive_profile.py "$AGENT_NAME" >> $LOG_DIR/profile.log 2>&1
+
+# ========== 数据备份（03:00）==========
+0 3 * * * cd $ANIMA_HOME && tar czf /tmp/anima-backup-$(date +\%Y\%m\%d).tar.gz core/ config/ >> $LOG_DIR/backup.log 2>&1
+
+# ========== 旧备份清理（每周日 04:00）==========
+0 4 * * 0 find /tmp -name "anima-backup-*.tar.gz" -mtime +30 -delete 2>/dev/null || true
