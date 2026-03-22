@@ -1,6 +1,6 @@
 {
   "name": "anima",
-  "version": "5.0.0",
+  "version": "5.0.5",
   "description": "Anima-AIOS 认知操作系统 - 让成长可见，让认知可量",
   "author": "枢衡 <shuheng@anima-aios.com>",
   "repository": "https://github.com/anima-aios/anima",
@@ -19,8 +19,15 @@
     "认知画像（五维评估 + 等级系统）",
     "每日任务（游戏化成长）",
     "团队归一化（公平比较）",
-    "数据保护（5 层安全机制）"
+    "数据保护（5 层安全机制）",
+    "OpenClaw 身份集成（零配置）",
+    "Doctor 记忆同步工具"
   ],
   "dataDirectory": "~/.anima",
-  "autoInstall": true
+  "autoInstall": true,
+  "changelog": {
+    "v5.0.5": "修复 Doctor 硬编码 workspace 路径，支持自动检测",
+    "v5.0.4": "OpenClaw 身份集成，SOUL.md/IDENTITY.md 自动解析",
+    "v5.0.3": "修复 EXP 计算 Bug，质量系数不惩罚"
+  }
 }

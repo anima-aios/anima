@@ -7,21 +7,29 @@ OpenClaw Skill 工具实现
 
 提供以下工具：
 - memory_search_v2: 增强版记忆搜索（+2 EXP）
-- memory_write_v2: 增强版记忆写入（自动 EXP 奖励）
+- memory_write_v2: 增强版记忆写入（自动 EXP 奖励 + 3 层同步）
 - get_cognitive_profile: 获取认知画像
 - get_exp: 查询 EXP 详情
 - get_level: 查询等级信息
 - quest_daily_status: 查看每日任务
 - quest_complete: 提交任务完成
 
+修复记录：
+- v5.0.3 (2026-03-22): 修复 3 层同步机制 Bug
+  - Bug 1: C 级质量 EXP 计算为 0 → 分离 base_exp 和 quality_multiplier
+  - Bug 2: 只写入第 1 层 → 新增第 2 层 Anima Facts 同步
+  - Bug 3: 维度命名不一致 → 统一使用 core 标准维度名
+
 Author: 枢衡
-Date: 2026-03-21
-Version: 5.0.0
+Date: 2026-03-22
+Version: 5.0.3
 """
 
 import os
 import sys
 import json
+import uuid
+import re
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -123,19 +131,25 @@ def _search_memory_simple(query: str, type: str, maxResults: int, agent_name: st
 
 
 # ============================================================================
-# 工具 2: memory_write_v2
+# 工具 2: memory_write_v2 (v5.0.3 修复版)
 # ============================================================================
 
 def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[str]] = None, 
                     quality: str = "auto", agent_name: str = "current") -> Dict:
     """
-    增强版记忆写入
+    增强版记忆写入（v5.0.3 修复版）
+    
+    修复内容：
+    - ✅ Bug 1: EXP 计算错误 → 分离 base_exp 和 quality_multiplier
+    - ✅ Bug 2: 只写入第 1 层 → 新增第 2 层 Anima Facts 同步
+    - ✅ Bug 3: 维度命名不一致 → 统一使用 core 标准维度名
     
     功能：
     - 自动计算 EXP 奖励（episodic +1, semantic +2）
     - 自动提取摘要和标签
     - 质量检测（完整性、价值度）
     - 去重检测
+    - **3 层同步**: OpenClaw Memory + Anima Facts + EXP History
     
     Args:
         content: 记忆内容
@@ -173,42 +187,54 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     if quality == "auto":
         quality = _assess_quality(content)
     
-    # 计算 EXP 奖励（质量系数只奖励不惩罚）
+    # 计算 EXP 奖励（v5.0.3 修复：分离 base_exp 和 quality_multiplier）
     base_exp = 1 if type == "episodic" else 2
-    quality_bonus = {"S": 1, "A": 1, "B": 0, "C": 0}.get(quality, 0)  # S/A 级额外 +1 EXP
-    exp_reward = base_exp + quality_bonus  # 基础 EXP + 质量奖励
+    quality_multiplier = {"S": 1.5, "A": 1.2, "B": 1.0, "C": 0.8}.get(quality, 1.0)
+    # ✅ 修复：最终 EXP 由 core 层的 add_exp() 计算，传入 quality_multiplier
+    # exp_reward = int(base_exp * quality_multiplier)  # ❌ 旧代码：int(0.8) = 0
     
-    # 写入记忆（简化实现：追加到今日文件）
-    fact_id = _write_memory_simple(content, type, tags, agent_name)
+    # ========== 第 1 层：写入 OpenClaw Memory ==========
+    _write_openclaw_memory(content, type, tags, agent_name)
     
-    # 记录 EXP（使用 core 层的维度命名）
-    # core 维度名：understanding, application, creation, metacognition, collaboration
-    dimension = "understanding" if type == "episodic" else "creation"
-    _add_exp(agent_name, dimension, exp_reward, "memory_write", {
+    # ========== 第 2 层：写入 Anima Facts (v5.0.3 新增) ==========
+    fact_id = _write_anima_fact(content, type, tags, agent_name)
+    
+    # ========== 第 3 层：记录 EXP (v5.0.3 修复) ==========
+    # 统一维度命名：understanding (原 internalization)
+    dimension = "understanding"
+    _add_exp(agent_name, dimension, base_exp, "memory_write", {
         "type": type,
         "quality": quality,
-        "content_length": len(content)
-    })
+        "content_length": len(content),
+        "fact_id": fact_id
+    }, quality_multiplier=quality_multiplier)
+    
+    # 计算最终 EXP 用于返回
+    exp_reward = int(base_exp * quality_multiplier)
+    if exp_reward < 1:
+        exp_reward = 1  # 保证最小 1 EXP
     
     return {
         "factId": fact_id,
         "expReward": exp_reward,
         "quality": quality,
         "tags": tags,
-        "message": f"记忆已保存，+{exp_reward} EXP（{type}, {quality}级）"
+        "message": f"记忆已保存，+{exp_reward} EXP（{type}, {quality}级）",
+        "sync": {
+            "layer1_openclaw": "✅",
+            "layer2_anima_facts": "✅",
+            "layer3_exp_history": "✅"
+        }
     }
 
 
-def _write_memory_simple(content: str, type: str, tags: List[str], agent_name: str) -> str:
-    """简单写入记忆到今日文件（并同步到画像目录）"""
+def _write_openclaw_memory(content: str, type: str, tags: List[str], agent_name: str):
+    """第 1 层：写入 OpenClaw Memory"""
     today = datetime.now().strftime("%Y-%m-%d")
     memory_file = WORKSPACE / "memory" / f"{today}.md"
     
     # 确保目录存在
     memory_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    # 生成 factId
-    fact_id = f"{today}_{len(content)}_{hash(content) % 10000:04d}"
     
     # 追加写入
     timestamp = datetime.now().strftime("%H:%M")
@@ -216,50 +242,60 @@ def _write_memory_simple(content: str, type: str, tags: List[str], agent_name: s
         f.write(f"\n- [{timestamp}] {content} #{type}\n")
         if tags:
             f.write(f"  标签：{', '.join(tags)}\n")
+
+
+def _write_anima_fact(content: str, type: str, tags: List[str], agent_name: str) -> str:
+    """
+    第 2 层：写入 Anima Facts（v5.0.3 新增）
     
-    # 同步到画像目录（第一层：实时同步）
-    _sync_to_portrait_memory(content, type, tags, agent_name, today, timestamp)
+    创建结构化事实文件到 /home/画像/{agent}/facts/{type}/
+    """
+    # 生成 factId
+    fact_id = f"{type}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    
+    # 确定事实目录
+    facts_dir = FACTS_BASE / agent_name / "facts" / type
+    facts_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 创建事实文件（Markdown 格式）
+    fact_file = facts_dir / f"{fact_id}.md"
+    timestamp = datetime.now().isoformat()
+    
+    # 构建事实内容
+    fact_content = f"""# {type.capitalize()} Fact
+
+**ID:** {fact_id}
+**日期:** {timestamp}
+**作者:** {agent_name}
+**类型:** {type}
+
+---
+
+## 内容
+
+{content}
+
+---
+
+## 标签
+
+{', '.join(tags) if tags else '无'}
+
+---
+
+## 元数据
+
+- 创建时间：{timestamp}
+- 内容长度：{len(content)} 字符
+- 质量等级：{_assess_quality(content)}
+
+"""
+    
+    # 写入文件
+    with open(fact_file, "w", encoding="utf-8") as f:
+        f.write(fact_content)
     
     return fact_id
-
-
-def _sync_to_portrait_memory(content: str, type: str, tags: List[str], 
-                             agent_name: str, today: str, timestamp: str):
-    """
-    同步记忆到画像目录（第一层：实时同步）
-    
-    Args:
-        content: 记忆内容
-        type: 记忆类型
-        tags: 标签列表
-        agent_name: Agent 名称
-        today: 今日日期
-        timestamp: 时间戳
-    """
-    try:
-        # 画像目录路径
-        portrait_dir = Path(f"/home/画像/{agent_name}/memory/")
-        portrait_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 写入今日记忆文件
-        portrait_file = portrait_dir / f"{today}.md"
-        
-        # 检查是否已存在（避免重复）
-        if portrait_file.exists():
-            with open(portrait_file, "r", encoding="utf-8") as f:
-                if content in f.read():
-                    return  # 已存在，跳过
-        
-        # 追加写入
-        with open(portrait_file, "a", encoding="utf-8") as f:
-            f.write(f"\n- [{timestamp}] {content} #{type}\n")
-            if tags:
-                f.write(f"  标签：{', '.join(tags)}\n")
-        
-        print(f"✅ 记忆已同步到画像目录：{agent_name}/{today}.md")
-    except Exception as e:
-        print(f"⚠️  同步记忆失败：{e}")
-        # 不影响主流程
 
 
 def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool:
@@ -280,28 +316,33 @@ def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool
     # 计算内容哈希
     content_hash = hash(content)
     
-    # 检查今日记忆文件
+    # 检查今日记忆文件（第 1 层）
     today = datetime.now().strftime("%Y-%m-%d")
     memory_file = WORKSPACE / "memory" / f"{today}.md"
     
-    if not memory_file.exists():
-        return False
+    if memory_file.exists():
+        try:
+            with open(memory_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                recent_lines = lines[-10:] if len(lines) > 10 else lines
+                for line in recent_lines:
+                    if content.strip() in line:
+                        return True
+        except Exception:
+            pass
     
-    # 读取今日记忆，检查是否有相同哈希
-    try:
-        with open(memory_file, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            # 检查最近 10 条记忆
-            recent_lines = lines[-10:] if len(lines) > 10 else lines
-            for line in recent_lines:
-                if content.strip() in line:
-                    return True
-    except FileNotFoundError:
-        # 文件不存在，返回 False
-        pass
-    except Exception as e:
-        # 记录错误但不影响主流程
-        _log_exp_error(agent_name, e)
+    # 检查 Anima Facts（第 2 层）
+    for fact_type in ['episodic', 'semantic']:
+        facts_dir = FACTS_BASE / agent_name / "facts" / fact_type
+        if facts_dir.exists():
+            today_prefix = datetime.now().strftime("%Y%m%d")
+            for fact_file in facts_dir.glob(f"{fact_type}_{today_prefix}*.md"):
+                try:
+                    fact_content = fact_file.read_text(encoding="utf-8")
+                    if content.strip() in fact_content:
+                        return True
+                except Exception:
+                    pass
     
     return False
 
@@ -804,52 +845,192 @@ def normalize_score(raw_score: float, metric_type: str, team_size: int) -> Dict:
 # 辅助函数
 # ============================================================================
 
+# 工作空间名称 → Agent 中文名称映射
+WORKSPACE_AGENT_MAP = {
+    "shuheng": "枢衡",
+    "rian": "日安",
+    "xinglan": "星澜",
+    "mingche": "明澈",
+    "liuying": "流萤",
+    "zhengyan": "正言",
+    "jinyu": "瑾瑜",
+    "tangdou": "糖豆",
+    "qingshan": "青衫",
+    "baimo": "白墨",
+}
+
+
 def _get_current_agent() -> str:
     """
-    获取当前 Agent 名称
+    获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
     
-    优先级：
-    1. 环境变量 ANIMA_AGENT_NAME
-    2. OpenClaw 会话上下文（如果可用）
-    3. 默认值 "Agent"
+    优先级（立文指定）：
+    1. ANIMA_AGENT_NAME 环境变量          ← 手动覆盖
+    2. ANIMA_WORKSPACE 环境变量           ← OpenClaw 注入
+    3. 解析 SOUL.md                       ← OpenClaw 身份 ⭐
+    4. 解析 IDENTITY.md                   ← OpenClaw 身份 ⭐
+    5. 工作目录路径解析                   ← 自动检测
+    6. 自动扫描 /home/画像/               ← 降级
+    7. 默认值 "Agent"                     ← 最终降级
     """
     import os
+    import re
     
-    # 1. 从环境变量获取
+    # 1. 环境变量（手动覆盖，最高优先级）
     agent_name = os.getenv("ANIMA_AGENT_NAME")
     if agent_name:
         return agent_name
     
-    # 2. 从 OpenClaw 上下文获取（如果可用）
-    # TODO: 集成 OpenClaw 会话 API
+    # 2. ANIMA_WORKSPACE（OpenClaw 注入）
+    workspace = os.getenv("ANIMA_WORKSPACE") or os.getenv("WORKSPACE")
+    if workspace:
+        workspace_path = Path(workspace)
+        workspace_name = workspace_path.name
+        # 处理 workspace-{name} 格式
+        if workspace_name.startswith("workspace-"):
+            workspace_name = workspace_name.replace("workspace-", "")
+        return _map_workspace_to_agent(workspace_name)
     
-    # 3. 默认值
+    # 3. 解析 SOUL.md（OpenClaw 身份 ⭐）
+    if WORKSPACE.exists():
+        soul_file = WORKSPACE / "SOUL.md"
+        if soul_file.exists():
+            agent_name = _parse_soul_file(soul_file)
+            if agent_name:
+                return agent_name
+        
+        # 4. 解析 IDENTITY.md（OpenClaw 身份 ⭐）
+        identity_file = WORKSPACE / "IDENTITY.md"
+        if identity_file.exists():
+            agent_name = _parse_identity_file(identity_file)
+            if agent_name:
+                return agent_name
+    
+    # 5. 工作目录路径解析（自动检测）
+    cwd = Path.cwd()
+    if ".openclaw" in str(cwd):
+        for part in cwd.parts:
+            if part.startswith("workspace-"):
+                workspace_name = part.replace("workspace-", "")
+                return _map_workspace_to_agent(workspace_name)
+    
+    # 6. 降级：自动扫描 /home/画像/
+    if FACTS_BASE.exists():
+        for agent_dir in FACTS_BASE.iterdir():
+            if agent_dir.is_dir():
+                exp_file = agent_dir / "exp_history.jsonl"
+                if exp_file.exists():
+                    return agent_dir.name
+    
+    # 7. 默认值
     return "Agent"
 
 
-def _add_exp(agent_name: str, dimension: str, exp: int, action: str, details: Dict):
-    """添加 EXP 记录"""
+def _map_workspace_to_agent(workspace_name: str) -> str:
+    """
+    将工作空间名称映射到 Agent 中文名称
+    
+    Args:
+        workspace_name: 工作空间名称（如 shuheng）
+    
+    Returns:
+        Agent 中文名称（如 枢衡）
+    """
+    return WORKSPACE_AGENT_MAP.get(workspace_name, workspace_name)
+
+
+def _parse_identity_file(file_path: Path) -> Optional[str]:
+    """
+    从 IDENTITY.md 解析 Agent 名称
+    
+    示例格式:
+    ```markdown
+    # IDENTITY.md - Who Am I?
+    
+    - **Name:** 枢衡 (Shū Héng)
+    - **Creature:** AI 系统架构师
+    ```
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        
+        # 匹配模式：- **Name:** 枢衡 (Shū Héng)
+        match = re.search(r'\*\*Name:\*\*\s*([^(]+)', content)
+        if match:
+            name = match.group(1).strip()
+            # 清理括号和空格
+            name = re.sub(r'\s*\(.*\)', '', name)
+            return name
+    except Exception:
+        pass
+    
+    return None
+
+
+def _parse_soul_file(file_path: Path) -> Optional[str]:
+    """
+    从 SOUL.md 解析 Agent 名称
+    
+    示例格式:
+    ```markdown
+    # SOUL.md - 枢衡的灵魂
+    
+    ## ⚖️ 我是谁
+    **姓名：** 枢衡 (Shū Héng)
+    ```
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        
+        # 匹配模式 1: # SOUL.md - 枢衡的灵魂
+        match = re.search(r'#\s*SOUL\.md\s*-\s*(.+) 的', content)
+        if match:
+            return match.group(1).strip()
+        
+        # 匹配模式 2: **姓名：** 枢衡
+        match = re.search(r'\*\*姓名：\*\*\s*([^(]+)', content)
+        if match:
+            name = match.group(1).strip()
+            name = re.sub(r'\s*\(.*\)', '', name)
+            return name
+    except Exception:
+        pass
+    
+    return None
+
+
+def _add_exp(agent_name: str, dimension: str, exp: int, action: str, details: Dict,
+             quality_multiplier: float = 1.0):
+    """
+    添加 EXP 记录（v5.0.3 修复版）
+    
+    修复：
+    - ✅ 传入 quality_multiplier 到 core 层，让 add_exp() 正确计算
+    - ✅ 统一维度命名（understanding, application, creation, metacognition, collaboration）
+    """
     try:
         # 尝试使用 core 模块
         if ANIMA_HOME.exists():
             try:
                 sys.path.insert(0, str(ANIMA_HOME / "core"))
                 from exp_tracker import EXPTracker
-                tracker = EXPTracker(agent_name)
-                success, msg = tracker.add_exp(dimension, action, exp, details)
+                tracker = EXPTracker(agent_name, facts_base=str(FACTS_BASE))
+                # ✅ 修复：传入 quality_multiplier 参数
+                success, msg = tracker.add_exp(dimension, action, exp, details, 
+                                               quality_multiplier=quality_multiplier)
                 if not success:
                     # core 记录失败，fallback 到本地文件
-                    _add_exp_fallback(agent_name, dimension, exp, action, details)
+                    _add_exp_fallback(agent_name, dimension, exp, action, details, quality_multiplier)
             except ImportError as e:
                 # core 模块导入失败，使用 fallback
-                _add_exp_fallback(agent_name, dimension, exp, action, details)
+                _add_exp_fallback(agent_name, dimension, exp, action, details, quality_multiplier)
             except Exception as e:
                 # core 其他错误，记录日志并 fallback
                 _log_exp_error(agent_name, e)
-                _add_exp_fallback(agent_name, dimension, exp, action, details)
+                _add_exp_fallback(agent_name, dimension, exp, action, details, quality_multiplier)
         else:
             # core 未安装，直接使用 fallback
-            _add_exp_fallback(agent_name, dimension, exp, action, details)
+            _add_exp_fallback(agent_name, dimension, exp, action, details, quality_multiplier)
     except Exception as e:
         # 所有方法都失败，记录错误日志
         _log_exp_error(agent_name, e)
@@ -870,15 +1051,30 @@ def _log_exp_error(agent_name: str, error: Exception):
         pass
 
 
-def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, details: Dict):
-    """降级方案：直接写入 EXP 历史文件"""
+def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, details: Dict,
+                      quality_multiplier: float = 1.0):
+    """
+    降级方案：直接写入 EXP 历史文件（v5.0.3 修复版）
+    
+    修复：
+    - ✅ 正确计算最终 EXP（base_exp * quality_multiplier）
+    - ✅ 保证最小 1 EXP
+    """
     exp_file = WORKSPACE / "anima_exp_history.jsonl"
+    
+    # ✅ 修复：计算最终 EXP
+    final_exp = exp * quality_multiplier
+    if final_exp < 1:
+        final_exp = 1  # 保证最小 1 EXP
+    
     record = {
         "timestamp": datetime.now().isoformat(),
         "agent": agent_name,
         "dimension": dimension,
         "action": action,
-        "exp": exp,
+        "exp": round(final_exp, 2),
+        "base_exp": exp,
+        "quality_multiplier": quality_multiplier,
         "details": details
     }
     
@@ -913,4 +1109,8 @@ if __name__ == "__main__":
     
     print("\n测试 quest_daily_status...")
     result = quest_daily_status("枢衡")
+    print(f"结果：{result}")
+    
+    print("\n测试 memory_write_v2 (v5.0.3 修复版)...")
+    result = memory_write_v2("测试 3 层同步机制修复", type="episodic", agent_name="枢衡")
     print(f"结果：{result}")

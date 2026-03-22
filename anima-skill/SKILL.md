@@ -32,7 +32,7 @@ bash /tmp/anima/install.sh
 rm -rf /tmp/anima
 
 # 2. 安装 skill
-cd ~/.openclaw/workspace/skills/
+cd ~/.openclaw/workspace-shuheng/skills/
 ln -s ../../projects/anima/anima-skill anima
 ```
 
@@ -453,7 +453,7 @@ anima-skill/
 
 | 数据类型 | 位置 | 删除权限 |
 |----------|------|----------|
-| facts/ | ~/.openclaw/workspace/memory/ | 立文 + 枢衡 |
+| facts/ | ~/.openclaw/workspace-shuheng/memory/ | 立文 + 枢衡 |
 | cognitive_profile.json | ~/.anima/ | 立文 + 枢衡 |
 | exp_history.jsonl | ~/.anima/ | 立文 + 枢衡 |
 
@@ -522,5 +522,38 @@ level = max(1, int(exp ^ 0.28))
 MIT License
 
 **GitHub:** https://github.com/anima-aios/anima  
-**版本：** v5.0.0  
-**最后更新：** 2026-03-21
+**版本：** v5.0.5  
+**最后更新：** 2026-03-22
+
+---
+
+## 📝 版本历史
+
+### v5.0.5 (2026-03-22) - Doctor 修复
+
+**修复:**
+- ✅ 修复 Doctor 硬编码 workspace 路径
+- ✅ 添加自动身份检测逻辑
+- ✅ 支持 SOUL.md/IDENTITY.md 解析
+- ✅ 日安验证通过
+
+### v5.0.4 (2026-03-22) - OpenClaw 身份集成
+
+**新增:**
+- ✅ 集成 OpenClaw 身份体系
+- ✅ Doctor 记忆同步工具
+- ✅ 工作空间名称映射
+
+### v5.0.3 (2026-03-22) - Bug 修复
+
+**修复:**
+- ✅ 3 层同步机制 Bug
+- ✅ EXP 计算错误（质量系数不惩罚）
+- ✅ Doctor Agent 名称检测
+
+### v5.0.0 (2026-03-21) - 品牌升级
+
+**新增:**
+- ✅ 品牌升级：Memora → Anima-AIOS
+- ✅ 统一版本号
+- ✅ 目录结构优化
