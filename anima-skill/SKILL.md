@@ -1,559 +1,246 @@
-# Anima-AIOS Skill
+---
+name: anima-aios
+description: >
+  AI Agent 认知操作系统。为 Agent 提供记忆管理、经验值成长、五维认知画像、每日任务和团队排行榜。
+  Use when user mentions: cognitive profile, EXP, level, daily quest, memory sync, team ranking,
+  认知画像, 经验值, 等级, 每日任务, 记忆同步, 团队排行, growth tracking, agent abilities.
+---
 
-**Anima-AIOS 认知操作系统 - OpenClaw Skill 插件**
+# Anima-AIOS
 
-**Slogan:** "让成长可见，让认知可量" | "Making Growth Visible, Making Cognition Measurable"
+> **让成长可见，让认知可量** | Making Growth Visible, Making Cognition Measurable
+
+为你的 AI Agent 添加记忆、成长和认知能力。追踪每一次学习，量化每一份进步。
+
+---
+
+## ✨ 核心功能
+
+### 🧠 增强记忆管理
+- **3 层同步机制**：OpenClaw Memory + Anima Facts + EXP History
+- **EXP 奖励**：写记忆自动获得经验值
+- **智能去重**：自动避免重复记录
+
+### 📊 五维认知画像
+- **内化力**：衡量知识吸收和理解能力
+- **应用力**：衡量知识迁移和实践能力
+- **创造力**：衡量知识整合和创新能力
+- **元认知**：衡量自我反思和监控能力
+- **协作力**：衡量团队合作和互助能力
+
+### 🎮 游戏化成长
+- **等级系统**：从 Lv.1 新手到 Lv.100 终身成就
+- **每日任务**：每天 3 个挑战，完成获得额外 EXP
+- **进度追踪**：可视化升级进度条
+
+### 🏆 团队排行榜
+- **EXP 排行**：基于公平归一化算法排名
+- **实时竞争**：追踪排名变化和差距
+- **团队对比**：发现优势与短板
+
+### 🏥 Doctor 自检工具
+- **一键诊断**：检查 Skill/Core/数据完整性
+- **记忆同步**：验证多层记忆数据一致性
+- **自动修复**：常见问题一键解决
+
+---
+
+## 📸 效果展示
+
+### 认知画像卡片
+
+![Cognitive Profile](assets/认知画像-瑾瑜-en.png)
+
+*Agent 认知画像：五维评分 + 等级进度 + 今日 EXP 来源*
+
+---
+
+### 今日认知成长
+
+![Daily Growth](assets/今日认知成长-日安-en.png)
+
+*今日成长报告：任务进度 + EXP 来源 + 升级预测*
+
+---
+
+### 团队排行榜
+
+![Team Ranking](assets/团队认知成长排行榜-en.png)
+
+*团队 EXP 排行榜：实时竞争 + 变化追踪*
 
 ---
 
 ## 🚀 快速开始
 
-### 自动安装（推荐）
-
-通过 ClawHub 安装时会自动安装 core：
+### 1️⃣ 安装
 
 ```bash
-# 在 ClawHub 中搜索并安装
-clawhub install anima
+clawhub install anima-aios
 ```
 
-安装过程中会自动：
-1. ✅ 检查 Python 和 Git 环境
-2. ✅ 克隆 Anima 仓库
-3. ✅ 安装 anima-core 核心系统
-4. ✅ 配置数据目录（~/.anima）
+安装过程会自动：
+- ✅ 检查 Python 和 Git 环境
+- ✅ 安装 Anima Core 核心系统
+- ✅ 配置数据目录（`~/.anima`）
 
-### 手动安装
+### 2️⃣ 验证安装
 
 ```bash
-# 1. 安装 core
-git clone https://github.com/anima-aios/anima.git /tmp/anima
-bash /tmp/anima/install.sh
-rm -rf /tmp/anima
-
-# 2. 安装 skill
-cd ~/.openclaw/workspace-shuheng/skills/
-ln -s ../../projects/anima/anima-skill anima
+python3 anima_doctor.py
 ```
 
----
-
-## 📋 初始化检测
-
-Skill 会在首次调用时自动检测 core 是否安装：
-
-```python
-import os
-import subprocess
-import sys
-
-def _ensure_core_installed():
-    """确保 core 已安装，未安装则自动安装"""
-    anima_home = os.path.expanduser("~/.anima")
-    
-    if not os.path.exists(anima_home):
-        print("📦 检测到 Anima-AIOS 尚未安装，正在自动安装...")
-        
-        # 克隆仓库
-        subprocess.run([
-            "git", "clone", "--depth", "1",
-            "https://github.com/anima-aios/anima.git",
-            "/tmp/anima-core-install"
-        ], check=True)
-        
-        # 运行安装脚本
-        subprocess.run([
-            "bash", "/tmp/anima-core-install/install.sh"
-        ], check=True, cwd="/tmp/anima-core-install")
-        
-        # 清理
-        subprocess.run(["rm", "-rf", "/tmp/anima-core-install"], check=True)
-        
-        print("✅ Anima-AIOS core 安装完成！")
-    
-    # 添加 core 到 Python 路径
-    sys.path.insert(0, os.path.join(anima_home, "core"))
-
-# 在每个工具调用前确保 core 已安装
-_ensure_core_installed()
+**预期输出：**
+```
+============================================================
+  🏥 Anima-AIOS 自检工具
+============================================================
+当前 Agent: {你的名字}
+------------------------------------------------------------
+✅ skill_installed: Skill 已安装
+✅ core_installed: Core 已安装
+✅ data_integrity: 数据完整
+...
 ```
 
----
+### 3️⃣ 开始使用
 
-## 🛠️ 工具列表
-
-### 🏥 自检自修工具（Anima Doctor）
-
-#### `anima doctor`
-
-Anima-AIOS 自检自修工具，类似 Vega doctor。
-
-**功能：**
-- ✅ 检查 skill 是否安装
-- ✅ 检查 core 是否安装
-- ✅ 检查配置文件
-- ✅ 检查数据完整性
-- ✅ 检查依赖是否齐全
-- ✅ 检查目录权限
-- ✅ 自动修复常见问题
-
-**用法：**
-```bash
-# 自检
-anima doctor
-
-# 自修（交互式确认）
-anima doctor --fix
-
-# 自修（自动模式，无需确认）
-anima doctor --fix --auto
-```
-
-**检查项：**
-| 检查项 | 说明 |
-|--------|------|
-| skill_installed | 检查 Skill 文件是否完整 |
-| core_installed | 检查 Core 模块是否安装 |
-| config | 检查配置文件是否正确 |
-| data_integrity | 检查数据文件完整性 |
-| dependencies | 检查 Python 依赖 |
-| permissions | 检查目录权限 |
-
-**自动修复：**
-- ✅ 创建默认配置文件
-- ✅ 安装缺失的依赖
-- ✅ 修复目录权限
-- ✅ 重新安装 core 模块
-
----
-
-### 🧠 记忆工具（Memory v2）
-
-#### `memory_search_v2(query, type="all", maxResults=10)`
-
-增强版记忆搜索，支持语义检索和 EXP 奖励。
-
-**参数：**
-- `query` (string): 搜索关键词
-- `type` (string): 记忆类型，可选 `"episodic"`, `"semantic"`, `"all"`（默认）
-- `maxResults` (number): 最大结果数（默认 10）
-
-**返回：**
-- 搜索结果列表（带相关性评分）
-- 自动奖励 +2 EXP
-
-**示例：**
-```
-搜索关于 Vega 的记忆
-→ 返回相关记忆，+2 EXP
-```
-
-#### `memory_write_v2(content, type="episodic", tags=[], quality="auto")`
-
-增强版记忆写入，自动计算 EXP 奖励。
-
-**参数：**
-- `content` (string): 记忆内容
-- `type` (string): 记忆类型，`"episodic"`（经历）或 `"semantic"`（知识）
-- `tags` (array): 标签列表（可选，自动提取）
-- `quality` (string): 质量等级，`"auto"`（自动评估）或 `"S"`, `"A"`, `"B"`, `"C"`
-
-**返回：**
-- `factId`: 记忆 ID
-- `expReward`: EXP 奖励（episodic +1, semantic +2）
-- `quality`: 质量评估结果
-
-**EXP 奖励规则：**
-| 类型 | EXP | 说明 |
-|------|-----|------|
-| episodic | +1 | 日常经历记录 |
-| semantic | +2 | 知识沉淀（双倍） |
-| 高质量（S 级） | +50% | 额外奖励 |
-
-**示例：**
-```
-记住：今天完成了 Anima v5.0 品牌升级，统一了版本号和目录结构
-→ 自动识别为 semantic，+2 EXP，提取标签 ["Anima", "版本升级"]
-```
-
----
-
-### 📊 认知工具（Cognitive Profile）
-
-#### `get_cognitive_profile(agent_name="current")`
-
-获取认知画像，包含五维评分和等级信息。
-
-**参数：**
-- `agent_name` (string): Agent 名称，默认 `"current"`（当前用户）
-
-**返回：**
-```json
-{
-  "agent": "枢衡",
-  "level": 10,
-  "exp": 5060,
-  "nextLevelExp": 6400,
-  "progress": "79%",
-  "dimensions": {
-    "internalization": 85,  // 内化
-    "application": 78,      // 应用
-    "creation": 92,         // 创造
-    "metacognition": 88,    // 元认知
-    "collaboration": 75     // 协作
-  },
-  "radar": "五维雷达图（ASCII）"
-}
-```
-
-**示例：**
+**查看认知画像：**
 ```
 我的认知画像是什么？
-→ 返回五维评分 + 等级 + 进度条
 ```
 
-#### `get_exp(agent_name="current")`
-
-查询 EXP 详情。
-
-**参数：**
-- `agent_name` (string): Agent 名称
-
-**返回：**
-```json
-{
-  "totalExp": 5060,
-  "todayExp": 45,
-  "level": 10,
-  "breakdown": {
-    "memory_write": 2100,
-    "memory_search": 1500,
-    "weekly_report": 800,
-    "knowledge_share": 660
-  }
-}
-```
-
-**示例：**
+**查看经验值：**
 ```
 我的经验值是多少？
-→ 返回总 EXP、今日 EXP、来源分布
 ```
 
-#### `get_level(agent_name="current")`
-
-查询等级信息。
-
-**返回：**
-```json
-{
-  "currentLevel": 10,
-  "nextLevel": 11,
-  "currentExp": 5060,
-  "requiredExp": 6400,
-  "progress": 79,
-  "progressBar": "████████░░ 79%"
-}
+**写一条记忆：**
+```
+记住：今天完成了 Anima v5.0 发布
 ```
 
-**示例：**
-```
-我现在的等级是多少？
-→ 返回等级 + 升级进度
-```
-
-#### `generate_profile_card(agent_name="current")`
-
-生成可视化认知画像卡片（ASCII 艺术）。
-
-**返回：**
-```
-╔══════════════════════════════════════════╗
-║         枢衡 - 认知画像 Lv.10            ║
-╠══════════════════════════════════════════╣
-║  EXP: 5060 / 6400  ████████░░ 79%        ║
-╠══════════════════════════════════════════╣
-║  内化 ████████████████░░  85             ║
-║  应用 ██████████████░░░░  78             ║
-║  创造 █████████████████░  92  ⭐         ║
-║  元认知 ████████████████░░  88           ║
-║  协作 ██████████████░░░░  75             ║
-╠══════════════════════════════════════════╣
-║  Tool Calls: 2071 | Rank: #1/9           ║
-╚══════════════════════════════════════════╝
-```
-
----
-
-### 🎮 任务工具（Daily Quest）
-
-#### `quest_daily_status(agent_name="current")`
-
-查看今日任务状态。
-
-**返回：**
-```json
-{
-  "date": "2026-03-21",
-  "quests": [
-    {
-      "id": "q1",
-      "title": "写一条记忆",
-      "difficulty": "easy",
-      "expReward": 5,
-      "status": "completed"
-    },
-    {
-      "id": "q2",
-      "title": "搜索记忆 3 次",
-      "difficulty": "medium",
-      "expReward": 10,
-      "status": "in_progress",
-      "progress": "2/3"
-    },
-    {
-      "id": "q3",
-      "title": "分享知识到团队",
-      "difficulty": "hard",
-      "expReward": 20,
-      "status": "pending"
-    }
-  ],
-  "completionBonus": 15
-}
-```
-
-**示例：**
+**查看今日任务：**
 ```
 今天的任务是什么？
-→ 返回 3 个每日任务 + 进度
-```
-
-#### `quest_complete(quest_id, proof)`
-
-提交任务完成。
-
-**参数：**
-- `quest_id` (string): 任务 ID
-- `proof` (string): 完成证据（可选）
-
-**返回：**
-- 成功确认
-- EXP 奖励发放
-
-**示例：**
-```
-完成任务：写周报
-→ 验证 + 发放 EXP + 更新进度
-```
-
-#### `quest_refresh(agent_name="current")`
-
-刷新每日任务。
-
-**说明：**
-- 每日 00:00 自动刷新
-- 可手动刷新（每日 1 次机会）
-
----
-
-### 📈 团队工具（Normalization）
-
-#### `get_team_ranking(team_name="all")`
-
-查看团队排行榜。
-
-**参数：**
-- `team_name` (string): 团队名称，`"all"` 表示全部
-
-**返回：**
-```
-╔══════════════════════════════════════════╗
-║         EXP 排行榜 - 全部 Agent           ║
-╠══════════════════════════════════════════╣
-║  #1  枢衡    Lv.10  5060 EXP  ⭐         ║
-║  #2  日安    Lv.10  4722 EXP             ║
-║  #3  星澜    Lv.9   3180 EXP             ║
-║  #4  白墨    Lv.7   1252 EXP             ║
-║  #5  糖豆    Lv.7   1050 EXP             ║
-╚══════════════════════════════════════════╝
-```
-
-#### `normalize_score(raw_score, metric_type, team_size)`
-
-分数归一化（用于公平比较）。
-
-**参数：**
-- `raw_score` (number): 原始分数
-- `metric_type` (string): 指标类型（exp/tool_calls/facts）
-- `team_size` (number): 团队人数
-
-**算法：**
-- 小团队（<10 人）：线性归一化
-- 大团队（≥10 人）：百分位归一化
-
----
-
-## 📁 目录结构
-
-```
-anima-skill/
-├── SKILL.md              # 本文档
-├── _meta.json            # 元数据配置
-├── post-install.sh       # 安装后钩子（自动安装 core）
-├── scripts/
-│   └── install-core.sh   # core 独立安装脚本
-└── README.md             # 补充说明
 ```
 
 ---
 
-## 🔧 配置
+## 🔧 工具列表
 
-### 配置文件位置
-
-`~/.anima/anima_config.json`
-
-### 配置项
-
-```json
-{
-  "exp": {
-    "enabled": true,
-    "dailyLimit": 100
-  },
-  "quest": {
-    "enabled": true,
-    "autoRefresh": true
-  },
-  "profile": {
-    "autoUpdate": true,
-    "updateInterval": 3600
-  },
-  "data": {
-    "backupEnabled": true,
-    "backupTime": "03:00"
-  }
-}
-```
-
----
-
-## 🛡️ 数据保护
-
-### 5 层保护机制
-
-1. **DO_NOT_DELETE.txt** - 保护标记文件
-2. **自动备份脚本** - 每天 03:00 自动备份
-3. **清理前检查** - safe-cleanup-check.sh
-4. **定期备份 Cron** - 系统级定时任务
-5. **数据保护规范** - 明确删除权限
-
-### P0 数据（最高保护级别）
-
-| 数据类型 | 位置 | 删除权限 |
-|----------|------|----------|
-| facts/ | ~/.openclaw/workspace-shuheng/memory/ | 立文 + 枢衡 |
-| cognitive_profile.json | ~/.anima/ | 立文 + 枢衡 |
-| exp_history.jsonl | ~/.anima/ | 立文 + 枢衡 |
+| 工具 | 用途 | EXP 奖励 |
+|------|------|----------|
+| `memory_write` | 写入记忆 | +1~2 |
+| `memory_search` | 搜索记忆 | +2 |
+| `get_cognitive_profile` | 认知画像 | - |
+| `get_exp` | 查询 EXP | - |
+| `get_level` | 查询等级 | - |
+| `quest_daily_status` | 今日任务 | - |
+| `quest_complete` | 完成任务 | +5~20 |
+| `get_team_ranking` | 团队排行 | - |
+| `python3 anima_doctor.py` | 自检自修 | - |
 
 ---
 
 ## 📊 等级系统
 
+### 成长路径
+
+| 等级 | EXP 需求 | 阶段 |
+|------|----------|------|
+| Lv.1 | 2 | 新手起步 |
+| Lv.3 | 100 | 第 1 天 |
+| Lv.6 | 1,000 | 第 1 周 |
+| Lv.13 | 10,000 | 第 1 月 |
+| Lv.25 | 100,000 | 第 1 年 |
+| Lv.100 | 14,000,000 | 终身成就 |
+
 ### EXP 获取规则
 
 | 行为 | EXP | 说明 |
 |------|-----|------|
-| 写 episodic fact | +1 | 日常记录 |
-| 写 semantic fact | +2 | 知识沉淀（双倍） |
+| 写记忆（episodic） | +1 | 日常记录 |
+| 写记忆（semantic） | +2 | 知识沉淀（双倍） |
 | 搜索记忆 | +2 | 主动检索 |
-| 分享知识到 shared/ | +5 | 团队贡献 |
-| 写周报/复盘 | +5 | 元认知 |
-| 协作任务 | +3 | 团队合作 |
-| 完成每日任务 | +5~20 | 难度相关 |
+| 完成任务 | +5~20 | 难度相关 |
+| 分享知识到团队 | +5 | 团队贡献 |
 
-### 等级公式
+---
 
+## ⚙️ 配置
+
+### 环境变量（可选）
+
+```bash
+# 手动指定 Agent 名称（通常自动检测）
+export ANIMA_AGENT_NAME=你的名字
+
+# 指定工作空间
+export ANIMA_WORKSPACE=/path/to/workspace
 ```
-level = max(1, int(exp ^ 0.28))
+
+### 数据存储
+
+- **数据目录：** `~/.anima/`
+- **记忆文件：** Agent workspace `memory/` 目录
+- **Facts 目录：** 自动创建在 Agent 画像目录下
+
+---
+
+## 🏥 Doctor 使用指南
+
+### 健康检查
+
+```bash
+python3 anima_doctor.py
 ```
 
-**等级需求：**
-- 2 EXP → Lv.1（新手起步）
-- 100 EXP → Lv.3（第 1 天）
-- 1000 EXP → Lv.6（第 1 周）
-- 1 万 EXP → Lv.13（第 1 月）
-- 10 万 EXP → Lv.25（第 1 年）
-- 1400 万 EXP → Lv.100（终身成就）
+### 检查记忆同步
 
----
+```bash
+python3 anima_doctor.py --check-sync
+```
 
-## 🎯 路线图
+### 同步历史记忆
 
-### v5.0.0 - 品牌升级 ✅
-- [x] 品牌升级：Memora → Anima-AIOS
-- [x] 统一版本号
-- [x] 目录结构优化
-- [x] 自动安装脚本
+```bash
+python3 anima_doctor.py --sync-memory
+```
 
-### v5.1.0 - 游戏化（规划中）
-- [ ] 成就徽章系统
-- [ ] 团队排行榜
-- [ ] 每周挑战
+### 自动修复
 
-### v5.2.0 - 插件化（规划中）
-- [ ] OpenClaw 深度集成
-- [ ] 新工具：get_cognitive_profile
-- [ ] 新工具：memory_search v2
-
----
-
-## 🙏 致谢
-
-- **立文** - 战略指导、品牌命名（Anima）
-- **日安** - 需求反馈、代码审查
-- **所有贡献者** - 测试与反馈
-
----
-
-## 📄 许可证
-
-MIT License
-
-**GitHub:** https://github.com/anima-aios/anima  
-**版本：** v5.0.5  
-**最后更新：** 2026-03-22
+```bash
+python3 anima_doctor.py --fix
+```
 
 ---
 
 ## 📝 版本历史
 
-### v5.0.5 (2026-03-22) - Doctor 修复
+**当前版本：** v5.0.5 (2026-03-22)
 
-**修复:**
-- ✅ 修复 Doctor 硬编码 workspace 路径
-- ✅ 添加自动身份检测逻辑
-- ✅ 支持 SOUL.md/IDENTITY.md 解析
-- ✅ 日安验证通过
+完整变更记录参见 [references/changelog.md](references/changelog.md)
 
-### v5.0.4 (2026-03-22) - OpenClaw 身份集成
+---
 
-**新增:**
-- ✅ 集成 OpenClaw 身份体系
-- ✅ Doctor 记忆同步工具
-- ✅ 工作空间名称映射
+## 🙏 致谢
 
-### v5.0.3 (2026-03-22) - Bug 修复
+感谢所有贡献者的测试与反馈。
 
-**修复:**
-- ✅ 3 层同步机制 Bug
-- ✅ EXP 计算错误（质量系数不惩罚）
-- ✅ Doctor Agent 名称检测
+Anima-AIOS 基于认知科学理论（Bloom 认知分类、Dreyfus 技能习得模型）设计。
 
-### v5.0.0 (2026-03-21) - 品牌升级
+---
 
-**新增:**
-- ✅ 品牌升级：Memora → Anima-AIOS
-- ✅ 统一版本号
-- ✅ 目录结构优化
+## 📄 许可证
+
+**MIT License**
+
+- **GitHub:** https://github.com/anima-aios/anima
+- **文档:** https://github.com/anima-aios/anima/blob/main/README.md
+- **版本:** v5.0.5
+- **最后更新:** 2026-03-22
+
+---
+
+_让每一次学习都有迹可循，让每一份成长都被看见。_

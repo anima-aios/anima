@@ -152,7 +152,7 @@ def _detect_workspace():
     return cwd
 
 WORKSPACE = _detect_workspace()
-SKILL_DIR = WORKSPACE / ".openclaw" / "skills" / "anima"
+SKILL_DIR = WORKSPACE / ".openclaw" / "skills" / "anima-aios"
 CORE_DIR = ANIMA_HOME / "core"  # Core 是全局共享的
 
 
