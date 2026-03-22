@@ -43,7 +43,7 @@ if ANIMA_HOME.exists():
 WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
 
 # 事实数据路径（facts_base）
-FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", "/home/画像"))
+FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", os.path.expanduser("~/.anima/data")))
 
 
 # ============================================================================

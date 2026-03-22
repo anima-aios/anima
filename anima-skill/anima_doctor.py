@@ -16,14 +16,13 @@ Anima Doctor - Anima-AIOS 自检自修工具
 import os
 import sys
 import json
-import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 
 # 项目路径（v5.0.5 修复：自动检测 workspace）
 ANIMA_HOME = Path(os.path.expanduser("~/.anima"))
-FACTS_BASE = Path("/home/画像")
+FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", os.path.expanduser("~/.anima/data")))
 
 # 工作空间名称 → Agent 名称映射（可自定义，默认为空，优先通过 SOUL.md 检测）
 WORKSPACE_AGENT_MAP = {}
@@ -528,51 +527,23 @@ class AnimaDoctor:
     
     def _fix_dependencies(self):
         """修复依赖"""
-        try:
-            print("正在安装依赖...")
-            subprocess.run([sys.executable, "-m", "pip", "install", "inotify", "requests"], check=True)
-            print("✅ 依赖已安装")
-            return True
-        except Exception as e:
-            print(f"❌ 安装依赖失败：{e}")
-            print("💡 请手动运行：pip install inotify requests")
-            return False
+        print("⚠️  请手动安装缺失依赖：")
+        print("   pip install inotify requests")
+        return False
     
     def _fix_permissions(self):
         """修复权限"""
-        try:
-            dirs_to_fix = [
-                ANIMA_HOME,
-                WORKSPACE / "memory",
-            ]
-            
-            for dir_path in dirs_to_fix:
-                if dir_path.exists():
-                    subprocess.run(["chmod", "-R", "755", str(dir_path)], check=True)
-            
-            print("✅ 权限已修复")
-            return True
-        except Exception as e:
-            print(f"❌ 修复权限失败：{e}")
-            return False
+        print("⚠️  请手动修复权限：")
+        print(f"   chmod -R 755 {ANIMA_HOME}")
+        print(f"   chmod -R 755 {WORKSPACE / 'memory'}")
+        return False
     
     def _reinstall_core(self):
         """重新安装 core"""
-        try:
-            print("正在重新安装 core...")
-            
-            # 运行 post-install.sh
-            post_install = SKILL_DIR / "post-install.sh"
-            if post_install.exists():
-                subprocess.run(["bash", str(post_install)], check=True)
-                print("✅ core 已重新安装")
-                return True
-            else:
-                print("❌ 找不到 post-install.sh")
-                return False
-        except Exception as e:
-            print(f"❌ 重新安装 core 失败：{e}")
-            return False
+        print("⚠️  请手动重新安装 Core：")
+        print(f"   cd {SKILL_DIR}")
+        print(f"   bash post-install.sh")
+        return False
     
     def check_sync_status(self):
         """检查记忆同步状态（v5.0.4 新增）"""
