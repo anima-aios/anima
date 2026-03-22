@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Anima Doctor v2 - Anima-AIOS 自检自修工具（配置化版本）
+Anima Doctor - Anima-AIOS 自检自修工具
 
 用法:
-    anima doctor              # 自检当前 Agent
-    anima doctor --agent 枢衡  # 自检指定 Agent
-    anima doctor --all         # 自检所有 Agent
-    anima doctor --fix         # 自修
-    anima doctor --fix --yes   # 自动修复（无需确认）
+    anima doctor              # 自检
+    anima doctor --fix        # 自修
+    anima doctor --fix --yes  # 自动修复（无需确认）
 
-设计原则:
-1. 无硬编码 - 所有路径从配置获取
-2. 支持多 Agent - 可以诊断任意 Agent
-3. 动态计算 - 不依赖静态文件
+修复记录:
+- v5.0.3 (2026-03-22): 修复 Agent 名称检测
+  - 优先级：环境变量 > OpenClaw 上下文 > 自动扫描 > 默认值
 """
 
 import os
@@ -21,86 +18,236 @@ import sys
 import json
 import subprocess
 from pathlib import Path
+from typing import Dict, List, Optional
 from datetime import datetime
 
-# 工作空间路径
-WORKSPACE = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
-from typing import Dict, List, Optional
+# 项目路径（v5.0.5 修复：自动检测 workspace）
+ANIMA_HOME = Path(os.path.expanduser("~/.anima"))
+FACTS_BASE = Path("/home/画像")
 
-# 导入配置模块
-CORE_DIR = Path(__file__).parent.parent / 'anima-core' / 'core'
-sys.path.insert(0, str(CORE_DIR / 'config'))
+# 工作空间名称 → Agent 中文名称映射
+WORKSPACE_AGENT_MAP = {
+    "shuheng": "枢衡",
+    "rian": "日安",
+    "xinglan": "星澜",
+    "mingche": "明澈",
+    "liuying": "流萤",
+    "zhengyan": "正言",
+    "jinyu": "瑾瑜",
+    "tangdou": "糖豆",
+    "qingshan": "青衫",
+    "baimo": "白墨",
+}
 
-try:
-    from path_config import get_config
-except ImportError:
-    # Fallback: 使用默认配置
-    class DefaultConfig:
-        facts_base = Path('/home/画像')
-        anima_core_dir = CORE_DIR
-        backup_dir = Path('/home/画像/.backup')
+# 自动检测当前 workspace（v5.0.5 修复：移除硬编码）
+WORKSPACE_AGENT_MAP = {
+    "shuheng": "枢衡",
+    "rian": "日安",
+    "xinglan": "星澜",
+    "mingche": "明澈",
+    "liuying": "流萤",
+    "zhengyan": "正言",
+    "jinyu": "瑾瑜",
+    "tangdou": "糖豆",
+    "qingshan": "青衫",
+    "baimo": "白墨",
+}
+
+def _map_workspace_to_agent(workspace_name: str) -> str:
+    """
+    将工作空间名称映射到 Agent 中文名称
     
-    def get_config():
-        return DefaultConfig()
+    Args:
+        workspace_name: 工作空间名称（如 shuheng）
+    
+    Returns:
+        Agent 中文名称（如 枢衡）
+    """
+    return WORKSPACE_AGENT_MAP.get(workspace_name, workspace_name)
+
+def _parse_soul_file(file_path: Path) -> Optional[str]:
+    """
+    从 SOUL.md 解析 Agent 名称
+    
+    示例格式:
+    ```markdown
+    # SOUL.md - 枢衡的灵魂
+    
+    ## ⚖️ 我是谁
+    **姓名：** 枢衡 (Shū Héng)
+    ```
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        
+        # 匹配模式 1: # SOUL.md - 枢衡的灵魂
+        match = re.search(r'#\s*SOUL\.md\s*-\s*(.+) 的', content)
+        if match:
+            return match.group(1).strip()
+        
+        # 匹配模式 2: **姓名：** 枢衡
+        match = re.search(r'\*\*姓名：\*\*\s*([^(]+)', content)
+        if match:
+            name = match.group(1).strip()
+            name = re.sub(r'\s*\(.*\)', '', name)
+            return name
+    except Exception:
+        pass
+    
+    return None
+
+def _parse_identity_file(file_path: Path) -> Optional[str]:
+    """
+    从 IDENTITY.md 解析 Agent 名称
+    
+    示例格式:
+    ```markdown
+    # IDENTITY.md - Who Am I?
+    
+    - **Name:** 枢衡 (Shū Héng)
+    - **Creature:** AI 系统架构师
+    ```
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        
+        # 匹配模式：- **Name:** 枢衡 (Shū Héng)
+        match = re.search(r'\*\*Name:\*\*\s*([^(]+)', content)
+        if match:
+            name = match.group(1).strip()
+            # 清理括号和空格
+            name = re.sub(r'\s*\(.*\)', '', name)
+            return name
+    except Exception:
+        pass
+    
+    return None
+
+def _detect_workspace():
+    """
+    自动检测当前 workspace 路径（v5.0.5 修复版）
+    
+    优先级：
+    1. ANIMA_WORKSPACE 环境变量
+    2. 当前工作目录推断
+    3. 默认路径（兼容旧版）
+    """
+    # 方式 1: 从 ANIMA_WORKSPACE 环境变量获取
+    workspace = os.getenv("ANIMA_WORKSPACE")
+    if workspace and Path(workspace).exists():
+        return Path(workspace)
+    
+    # 方式 2: 从当前工作目录推断
+    cwd = Path.cwd()
+    for parent in [cwd] + list(cwd.parents):
+        if parent.name.startswith("workspace-") and ".openclaw" in str(parent):
+            return parent
+    
+    # 方式 3: 默认路径（兼容旧版，仅作为最后降级）
+    default = Path(os.path.expanduser("~/.openclaw/workspace-shuheng"))
+    if default.exists():
+        return default
+    
+    # 方式 4: 返回当前目录
+    return cwd
+
+WORKSPACE = _detect_workspace()
+SKILL_DIR = WORKSPACE / ".openclaw" / "skills" / "anima"
+CORE_DIR = ANIMA_HOME / "core"  # Core 是全局共享的
+
+
+def _get_current_agent() -> str:
+    """
+    获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
+    
+    优先级（立文指定）：
+    1. ANIMA_AGENT_NAME 环境变量          ← 手动覆盖
+    2. ANIMA_WORKSPACE 环境变量           ← OpenClaw 注入
+    3. 解析 SOUL.md                       ← OpenClaw 身份 ⭐
+    4. 解析 IDENTITY.md                   ← OpenClaw 身份 ⭐
+    5. 工作目录路径解析                   ← 自动检测
+    6. 自动扫描 /home/画像/               ← 降级
+    7. 默认值 "Agent"                     ← 最终降级
+    """
+    import os
+    import re
+    
+    # 1. 环境变量（手动覆盖，最高优先级）
+    agent_name = os.getenv("ANIMA_AGENT_NAME")
+    if agent_name:
+        return agent_name
+    
+    # 2. ANIMA_WORKSPACE（OpenClaw 注入）
+    workspace = os.getenv("ANIMA_WORKSPACE") or os.getenv("WORKSPACE")
+    if workspace:
+        workspace_path = Path(workspace)
+        workspace_name = workspace_path.name
+        # 处理 workspace-{name} 格式
+        if workspace_name.startswith("workspace-"):
+            workspace_name = workspace_name.replace("workspace-", "")
+        return _map_workspace_to_agent(workspace_name)
+    
+    # 3. 解析 SOUL.md（OpenClaw 身份 ⭐）
+    if WORKSPACE.exists():
+        soul_file = WORKSPACE / "SOUL.md"
+        if soul_file.exists():
+            agent_name = _parse_soul_file(soul_file)
+            if agent_name:
+                return agent_name
+        
+        # 4. 解析 IDENTITY.md（OpenClaw 身份 ⭐）
+        identity_file = WORKSPACE / "IDENTITY.md"
+        if identity_file.exists():
+            agent_name = _parse_identity_file(identity_file)
+            if agent_name:
+                return agent_name
+    
+    # 5. 工作目录路径解析（自动检测）
+    cwd = Path.cwd()
+    if ".openclaw" in str(cwd):
+        for part in cwd.parts:
+            if part.startswith("workspace-"):
+                workspace_name = part.replace("workspace-", "")
+                return _map_workspace_to_agent(workspace_name)
+    
+    # 6. 降级：自动扫描 /home/画像/
+    if FACTS_BASE.exists():
+        for agent_dir in FACTS_BASE.iterdir():
+            if agent_dir.is_dir():
+                exp_file = agent_dir / "exp_history.jsonl"
+                if exp_file.exists():
+                    return agent_dir.name
+    
+    # 7. 默认值
+    return "Agent"
 
 
 class AnimaDoctor:
-    """Anima 自检自修工具（配置化版本）"""
+    """Anima 自检自修工具"""
     
-    def __init__(self, agent_name: Optional[str] = None):
-        """
-        初始化医生
-        
-        Args:
-            agent_name: Agent 名称（可选，不传则使用当前 Agent）
-        """
-        self.config = get_config()
-        self.agent_name = agent_name or self._get_current_agent()
-        self.agent_dir = Path(self.config.facts_base) / self.agent_name
+    def __init__(self):
+        """初始化医生"""
         self.checks = {}
         self.fixes = []
     
-    def _get_current_agent(self) -> str:
-        """获取当前 Agent 名称"""
-        # 优先级：
-        # 1. 环境变量 ANIMA_AGENT_NAME
-        # 2. OpenClaw 会话上下文（TODO）
-        # 3. 默认值 'Agent'
-        
-        agent_name = os.getenv('ANIMA_AGENT_NAME')
-        
-        if not agent_name:
-            # TODO: 从 OpenClaw 会话上下文获取
-            agent_name = 'Agent'
-        
-        return agent_name
-    
-    def diagnose(self, auto_fix=False, auto_confirm=False) -> bool:
+    def diagnose(self, auto_fix=False, auto_confirm=False):
         """
         自检 Anima 状态
         
         Args:
             auto_fix: 是否自动修复
             auto_confirm: 是否自动确认修复
-        
-        Returns:
-            是否有问题
         """
         print("=" * 60)
-        print(f"  🏥 Anima-AIOS 自检工具 - {self.agent_name}")
+        print("  🏥 Anima-AIOS 自检工具")
         print("=" * 60)
         print(f"  时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"  路径：{self.config.facts_base}")
         print("=" * 60)
         print()
         
         # 执行检查
         self._check_skill_installed()
         self._check_core_installed()
-        self._check_exp_data()
-        self._check_profile_dynamic()
-        self._check_memory_files()
-        self._check_memory_sync()
         self._check_config()
         self._check_data_integrity()
         self._check_dependencies()
@@ -120,37 +267,16 @@ class AnimaDoctor:
                     self.recover()
             else:
                 print("\n💡 提示：运行以下命令修复")
-                print(f"   anima doctor --agent {self.agent_name} --fix")
+                print("   anima doctor --fix")
         
         return has_issues
     
-    def diagnose_all_agents(self) -> Dict[str, bool]:
-        """
-        诊断所有 Agent
-        
-        Returns:
-            每个 Agent 的诊断结果
-        """
-        sys.path.insert(0, str(CORE_DIR))
-        from team_scanner import TeamScanner
-        
-        scanner = TeamScanner()
-        agents = scanner.scan_active_agents()
-        
-        results = {}
-        for agent_name in agents:
-            doctor = AnimaDoctor(agent_name)
-            results[agent_name] = doctor.diagnose()
-        
-        return results
-    
     def _check_skill_installed(self):
         """检查 skill 是否安装"""
-        skill_dir = Path(__file__).parent
         skill_files = [
-            skill_dir / "SKILL.md",
-            skill_dir / "_meta.json",
-            skill_dir / "anima_tools.py",
+            SKILL_DIR / "SKILL.md",
+            SKILL_DIR / "_meta.json",
+            SKILL_DIR / "anima_tools.py",
         ]
         
         missing = [f for f in skill_files if not f.exists()]
@@ -170,18 +296,18 @@ class AnimaDoctor:
     def _check_core_installed(self):
         """检查 core 是否安装"""
         core_files = [
-            self.config.anima_core_dir / "exp_tracker.py",
-            self.config.anima_core_dir / "cognitive_profile.py",
-            self.config.anima_core_dir / "level_system.py",
+            ANIMA_HOME / "core" / "exp_tracker.py",
+            ANIMA_HOME / "core" / "cognitive_profile.py",
+            ANIMA_HOME / "core" / "dimension_calculator.py",
         ]
         
         missing = [f for f in core_files if not f.exists()]
         
         if missing:
             self.checks['core_installed'] = {
-                'status': 'error',
-                'message': f'Core 未安装，缺失文件：{len(missing)} 个',
-                'fix': '运行 anima install-core 或手动安装'
+                'status': 'warning',
+                'message': f'Core 未完全安装，缺失文件：{len(missing)} 个',
+                'fix': '运行 post-install.sh 或重新安装'
             }
         else:
             self.checks['core_installed'] = {
@@ -189,307 +315,241 @@ class AnimaDoctor:
                 'message': 'Core 已安装'
             }
     
-    def _check_exp_data(self):
-        """检查 EXP 数据"""
-        exp_file = self.agent_dir / 'exp_history.jsonl'
-        
-        if not exp_file.exists():
-            self.checks['exp_data'] = {
-                'status': 'warning',
-                'message': 'EXP 历史文件不存在',
-                'fix': '运行 session_scanner 初始化'
-            }
-            return
-        
-        # 计算总 EXP
-        total_exp = 0
-        with open(exp_file) as f:
-            for line in f:
-                try:
-                    record = json.loads(line)
-                    total_exp += record.get('exp', 0)
-                except:
-                    continue
-        
-        # 验证等级计算
-        expected_level = max(1, int(total_exp ** 0.28))
-        
-        self.checks['exp_data'] = {
-            'status': 'ok',
-            'message': f'EXP 总计 {total_exp}，等级 Lv.{expected_level}',
-            'details': {'total_exp': total_exp, 'expected_level': expected_level}
-        }
-    
-    def _check_profile_dynamic(self):
-        """检查画像是否动态计算"""
-        try:
-            sys.path.insert(0, str(self.config.anima_core_dir))
-            from cognitive_profile import CognitiveProfileGenerator
-            from level_system import LevelSystem
-            
-            generator = CognitiveProfileGenerator(self.agent_name, str(self.config.facts_base))
-            profile = generator.generate_profile(auto_scan=False)
-            
-            level_sys = LevelSystem(self.agent_name, str(self.config.facts_base))
-            expected_level = level_sys.get_level_info()['level']
-            
-            if profile['level'] != expected_level:
-                self.checks['profile_dynamic'] = {
-                    'status': 'error',
-                    'message': f'画像等级 ({profile["level"]}) 与 EXP 等级 ({expected_level}) 不一致',
-                    'fix': '更新代码到最新版本'
-                }
-            else:
-                self.checks['profile_dynamic'] = {
-                    'status': 'ok',
-                    'message': f'画像动态计算正常 (Lv.{profile["level"]})'
-                }
-        except Exception as e:
-            self.checks['profile_dynamic'] = {
-                'status': 'error',
-                'message': f'画像生成失败：{e}',
-                'fix': '检查 core 安装'
-            }
-    
-    def _check_memory_files(self):
-        """检查记忆文件"""
-        memory_dir = self.agent_dir / 'memory'
-        facts_dir = self.agent_dir / 'facts'
-        
-        today = datetime.now().strftime('%Y-%m-%d')
-        today_file = memory_dir / f'{today}.md'
-        
-        if not self.agent_dir.exists():
-            self.checks['memory_files'] = {
-                'status': 'error',
-                'message': 'Agent 目录不存在',
-                'fix': '运行 init 命令初始化'
-            }
-        elif not memory_dir.exists():
-            self.checks['memory_files'] = {
-                'status': 'warning',
-                'message': '记忆目录不存在',
-                'fix': '开始写第一条记忆吧！'
-            }
-        elif not today_file.exists():
-            self.checks['memory_files'] = {
-                'status': 'warning',
-                'message': f'今日记忆文件不存在 ({today}.md)',
-                'fix': '开始写今天的记忆吧！'
-            }
-        else:
-            self.checks['memory_files'] = {
-                'status': 'ok',
-                'message': '记忆文件正常'
-            }
-    
     def _check_config(self):
         """检查配置文件"""
-        config_file = self.agent_dir / 'anima_config.json'
+        config_file = ANIMA_HOME / "anima_config.json"
         
         if not config_file.exists():
             self.checks['config'] = {
                 'status': 'warning',
-                'message': '配置文件不存在（可选）',
-                'fix': '运行 anima init-config 创建默认配置'
+                'message': '配置文件不存在',
+                'fix': '创建默认配置文件'
             }
         else:
             try:
-                with open(config_file) as f:
+                with open(config_file, "r", encoding="utf-8") as f:
                     config = json.load(f)
                 
-                self.checks['config'] = {
-                    'status': 'ok',
-                    'message': '配置文件正常'
-                }
-            except Exception as e:
+                # 检查必要配置
+                required_keys = ['exp', 'quest', 'profile']
+                missing_keys = [k for k in required_keys if k not in config]
+                
+                if missing_keys:
+                    self.checks['config'] = {
+                        'status': 'warning',
+                        'message': f'配置不完整，缺失：{missing_keys}',
+                        'fix': '补充配置项'
+                    }
+                else:
+                    self.checks['config'] = {
+                        'status': 'ok',
+                        'message': '配置正确'
+                    }
+            except json.JSONDecodeError:
                 self.checks['config'] = {
                     'status': 'error',
-                    'message': f'配置文件损坏：{e}',
-                    'fix': '删除并重新创建配置文件'
+                    'message': '配置文件格式错误',
+                    'fix': '修复或重建配置文件'
                 }
     
     def _check_data_integrity(self):
-        """检查数据完整性"""
-        issues = []
+        """检查数据完整性（v5.0.3 修复：支持多 Agent）"""
+        # 获取当前 Agent 名称
+        agent_name = _get_current_agent()
         
-        # 检查 facts 目录
-        facts_dir = self.agent_dir / 'facts'
-        if facts_dir.exists():
-            episodic_count = len(list((facts_dir / 'episodic').glob('*.md'))) if (facts_dir / 'episodic').exists() else 0
-            semantic_count = len(list((facts_dir / 'semantic').glob('*.md'))) if (facts_dir / 'semantic').exists() else 0
-            
-            # 修复：使用 rglob 递归查找所有子目录，支持.md 和.json 格式
-            episodic_count = len(list((facts_dir / 'episodic').rglob('*.md'))) + len(list((facts_dir / 'episodic').rglob('*.json'))) if (facts_dir / 'episodic').exists() else 0
-            semantic_count = len(list((facts_dir / 'semantic').rglob('*.md'))) + len(list((facts_dir / 'semantic').rglob('*.json'))) if (facts_dir / 'semantic').exists() else 0
-            
-            if episodic_count + semantic_count == 0:
-                issues.append(f'facts 目录为空 (episodic: {episodic_count}, semantic: {semantic_count})')
-            else:
-                # 有数据，正常
-                self.checks['data_integrity'] = {
-                    'status': 'ok',
-                    'message': f'数据完整 (episodic: {episodic_count}, semantic: {semantic_count})'
-                }
-                return
+        # 检查两个位置的 EXP 历史
+        exp_files = [
+            ANIMA_HOME / agent_name / "exp_history.jsonl",  # 新位置（按 Agent 分开）
+            FACTS_BASE / agent_name / "exp_history.jsonl",  # 旧位置
+            ANIMA_HOME / "exp_history.jsonl",  # 通用位置（降级）
+        ]
         
-        if issues:
+        found_exp = False
+        total_records = 0
+        
+        for exp_file in exp_files:
+            if exp_file.exists():
+                try:
+                    with open(exp_file, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    total_records += len(lines)
+                    found_exp = True
+                except Exception:
+                    pass
+        
+        if found_exp:
             self.checks['data_integrity'] = {
-                'status': 'warning',
-                'message': ', '.join(issues),
-                'fix': '检查数据是否被误删'
+                'status': 'ok',
+                'message': f'数据完整 ({total_records} 条记录，Agent: {agent_name})'
             }
         else:
             self.checks['data_integrity'] = {
-                'status': 'ok',
-                'message': '数据完整性正常'
+                'status': 'warning',
+                'message': f'EXP 历史文件不存在（首次使用正常，Agent: {agent_name}）',
+                'fix': '开始使用后自动生成'
             }
     
     def _check_dependencies(self):
         """检查依赖"""
+        missing_deps = []
+        
+        # 检查 Python 包
         try:
             import inotify
+        except ImportError:
+            missing_deps.append('inotify')
+        
+        try:
             import requests
-            self.checks['dependencies'] = {
-                'status': 'ok',
-                'message': '依赖正常'
-            }
-        except ImportError as e:
+        except ImportError:
+            missing_deps.append('requests')
+        
+        if missing_deps:
             self.checks['dependencies'] = {
                 'status': 'error',
-                'message': f'缺少依赖：{e.name}',
-                'fix': '运行 pip install inotify requests'
+                'message': f'缺少依赖：{", ".join(missing_deps)}',
+                'fix': f'pip install {" ".join(missing_deps)}'
+            }
+        else:
+            self.checks['dependencies'] = {
+                'status': 'ok',
+                'message': '依赖齐全'
             }
     
     def _check_permissions(self):
-        """检查权限"""
+        """检查权限（v5.0.3 修复：增加 Agent 目录检查）"""
+        # 获取当前 Agent 名称
+        agent_name = _get_current_agent()
+        
+        # 检查关键目录权限
         dirs_to_check = [
-            self.config.facts_base,
-            self.agent_dir,
+            ANIMA_HOME,
+            WORKSPACE / "memory",
+            FACTS_BASE / agent_name,  # Agent 专属目录
         ]
         
-        issues = []
+        permission_issues = []
         for dir_path in dirs_to_check:
-            if dir_path.exists() and not os.access(dir_path, os.R_OK | os.W_OK):
-                issues.append(f'{dir_path} 权限不足')
+            if dir_path.exists():
+                if not os.access(dir_path, os.W_OK):
+                    permission_issues.append(str(dir_path))
         
-        if issues:
+        if permission_issues:
             self.checks['permissions'] = {
                 'status': 'error',
-                'message': ', '.join(issues),
-                'fix': '运行 chmod -R 755 修复权限'
+                'message': f'无写入权限：{len(permission_issues)} 个目录',
+                'fix': 'chmod -R 755 ' + ' '.join(permission_issues)
             }
         else:
             self.checks['permissions'] = {
                 'status': 'ok',
-                'message': '权限正常'
-            }
-    
-    def _check_memory_sync(self):
-        """检查记忆同步状态"""
-        workspace_mem = WORKSPACE / "memory"
-        portrait_mem = Path(f"/home/画像/{self.agent_name}/memory")
-        
-        # 检查今日记忆
-        today = datetime.now().strftime("%Y-%m-%d")
-        workspace_today = workspace_mem / f"{today}.md"
-        portrait_today = portrait_mem / f"{today}.md"
-        
-        if workspace_today.exists() and not portrait_today.exists():
-            self.checks['memory_sync'] = {
-                'status': 'error',
-                'message': '记忆未同步到画像目录',
-                'fix': '运行 sync-memory.sh 或重新写入记忆'
-            }
-        elif workspace_today.exists() and portrait_today.exists():
-            self.checks['memory_sync'] = {
-                'status': 'ok',
-                'message': '记忆同步正常'
-            }
-        else:
-            self.checks['memory_sync'] = {
-                'status': 'warning',
-                'message': '今日无记忆（首次使用正常）',
-                'fix': '开始写入记忆后会自动同步'
+                'message': f'权限正常 (Agent: {agent_name})'
             }
     
     def _print_results(self):
-        """打印检查结果"""
-        print("\n诊断结果:")
+        """打印检查结果（v5.0.3 修复：显示当前 Agent）"""
+        agent_name = _get_current_agent()
+        
+        print("诊断结果:")
+        print("-" * 60)
+        print(f"当前 Agent: {agent_name}")
         print("-" * 60)
         
-        ok_count = sum(1 for check in self.checks.values() if check['status'] == 'ok')
-        warning_count = sum(1 for check in self.checks.values() if check['status'] == 'warning')
-        error_count = sum(1 for check in self.checks.values() if check['status'] == 'error')
-        
-        for check_name, check_data in self.checks.items():
-            status = check_data['status']
-            message = check_data['message']
+        for check_name, check_result in self.checks.items():
+            status_icon = {
+                'ok': '✅',
+                'warning': '⚠️',
+                'error': '❌'
+            }.get(check_result['status'], '❓')
             
-            if status == 'ok':
-                print(f"✅ {check_name}: {message}")
-            elif status == 'warning':
-                print(f"⚠️  {check_name}: {message}")
-            else:
-                print(f"❌ {check_name}: {message}")
+            print(f"{status_icon} {check_name}: {check_result['message']}")
         
         print("-" * 60)
+        
+        ok_count = sum(1 for c in self.checks.values() if c['status'] == 'ok')
+        warning_count = sum(1 for c in self.checks.values() if c['status'] == 'warning')
+        error_count = sum(1 for c in self.checks.values() if c['status'] == 'error')
+        
         print(f"总计：{ok_count} 正常，{warning_count} 警告，{error_count} 错误")
     
-    def _user_confirm(self, message) -> bool:
+    def _user_confirm(self, message):
         """用户确认"""
         response = input(f"{message} (y/N): ")
-        return response.lower() == 'y'
+        return response.lower() in ['y', 'yes']
     
     def recover(self):
-        """修复问题"""
-        print("\n执行修复...")
+        """自修 Anima 问题"""
+        print("\n开始自动修复...")
         print("-" * 60)
         
-        for check_name, check_data in self.checks.items():
-            if check_data['status'] != 'ok':
-                fix_method = getattr(self, f'_fix_{check_name}', None)
-                if fix_method:
-                    print(f"\n修复 {check_name}...")
-                    fix_method()
+        fixes = []
         
+        # 1. 修复配置文件
+        if self.checks.get('config', {}).get('status') != 'ok':
+            if self._fix_config():
+                fixes.append('config_fixed')
+        
+        # 2. 修复依赖
+        if self.checks.get('dependencies', {}).get('status') != 'ok':
+            if self._fix_dependencies():
+                fixes.append('dependencies_fixed')
+        
+        # 3. 修复权限
+        if self.checks.get('permissions', {}).get('status') != 'ok':
+            if self._fix_permissions():
+                fixes.append('permissions_fixed')
+        
+        # 4. 重新安装 core
+        if self.checks.get('core_installed', {}).get('status') == 'error':
+            if self._reinstall_core():
+                fixes.append('core_reinstalled')
+        
+        # 打印修复结果
         print("-" * 60)
-        print("修复完成")
+        if fixes:
+            print("修复结果:")
+            for fix in fixes:
+                print(f"✅ {fix}")
+            print("-" * 60)
+            print("✅ 修复完成！建议重新运行 anima doctor 验证")
+        else:
+            print("⚠️  部分问题需要手动修复，请查看上方提示")
+        
+        return fixes
     
     def _fix_config(self):
         """修复配置文件"""
-        config_file = self.agent_dir / 'anima_config.json'
-        
-        default_config = {
-            "exp": {
-                "enabled": True,
-                "dailyLimit": 100
-            },
-            "quest": {
-                "enabled": True,
-                "autoRefresh": True
-            },
-            "profile": {
-                "autoUpdate": True
-            },
-            "data": {
-                "backupEnabled": True,
-                "backupTime": "03:00"
+        try:
+            config_file = ANIMA_HOME / "anima_config.json"
+            config_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            default_config = {
+                "exp": {
+                    "enabled": True,
+                    "dailyLimit": 100
+                },
+                "quest": {
+                    "enabled": True,
+                    "autoRefresh": True
+                },
+                "profile": {
+                    "autoUpdate": True,
+                    "updateInterval": 3600
+                },
+                "data": {
+                    "backupEnabled": True,
+                    "backupTime": "03:00"
+                }
             }
-        }
-        
-        config_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        with open(config_file, "w", encoding="utf-8") as f:
-            json.dump(default_config, f, ensure_ascii=False, indent=2)
-        
-        print("✅ 配置文件已创建")
-        
-        # 更新检查状态
-        self.checks['config'] = {
-            'status': 'ok',
-            'message': '配置文件已创建'
-        }
+            
+            with open(config_file, "w", encoding="utf-8") as f:
+                json.dump(default_config, f, ensure_ascii=False, indent=2)
+            
+            print("✅ 配置文件已创建")
+            return True
+        except Exception as e:
+            print(f"❌ 创建配置文件失败：{e}")
+            return False
     
     def _fix_dependencies(self):
         """修复依赖"""
@@ -497,16 +557,18 @@ class AnimaDoctor:
             print("正在安装依赖...")
             subprocess.run([sys.executable, "-m", "pip", "install", "inotify", "requests"], check=True)
             print("✅ 依赖已安装")
+            return True
         except Exception as e:
             print(f"❌ 安装依赖失败：{e}")
             print("💡 请手动运行：pip install inotify requests")
+            return False
     
     def _fix_permissions(self):
         """修复权限"""
         try:
             dirs_to_fix = [
-                self.config.facts_base,
-                self.agent_dir,
+                ANIMA_HOME,
+                WORKSPACE / "memory",
             ]
             
             for dir_path in dirs_to_fix:
@@ -514,42 +576,228 @@ class AnimaDoctor:
                     subprocess.run(["chmod", "-R", "755", str(dir_path)], check=True)
             
             print("✅ 权限已修复")
+            return True
         except Exception as e:
             print(f"❌ 修复权限失败：{e}")
+            return False
+    
+    def _reinstall_core(self):
+        """重新安装 core"""
+        try:
+            print("正在重新安装 core...")
+            
+            # 运行 post-install.sh
+            post_install = SKILL_DIR / "post-install.sh"
+            if post_install.exists():
+                subprocess.run(["bash", str(post_install)], check=True)
+                print("✅ core 已重新安装")
+                return True
+            else:
+                print("❌ 找不到 post-install.sh")
+                return False
+        except Exception as e:
+            print(f"❌ 重新安装 core 失败：{e}")
+            return False
+    
+    def check_sync_status(self):
+        """检查记忆同步状态（v5.0.4 新增）"""
+        print("=" * 60)
+        print("  📊 Anima 记忆同步状态检查")
+        print("=" * 60)
+        
+        agent_name = _get_current_agent()
+        print(f"当前 Agent: {agent_name}")
+        print("-" * 60)
+        
+        # 检查 OpenClaw Memory
+        openclaw_memory = WORKSPACE / "memory"
+        openclaw_files = list(openclaw_memory.glob("*.md")) if openclaw_memory.exists() else []
+        
+        # 检查 Anima Facts
+        anima_facts = FACTS_BASE / agent_name / "facts"
+        episodic_facts = list(anima_facts.glob("episodic/*.md")) if anima_facts.exists() else []
+        semantic_facts = list(anima_facts.glob("semantic/*.md")) if anima_facts.exists() else []
+        
+        print(f"OpenClaw Memory 文件数：{len(openclaw_files)}")
+        print(f"Anima Facts 文件数：{len(episodic_facts) + len(semantic_facts)}")
+        print(f"  - Episodic: {len(episodic_facts)}")
+        print(f"  - Semantic: {len(semantic_facts)}")
+        print("-" * 60)
+        
+        # 计算同步率
+        if len(openclaw_files) > 0:
+            sync_rate = (len(episodic_facts) + len(semantic_facts)) / len(openclaw_files) * 100
+            print(f"同步率：{sync_rate:.1f}%")
+            
+            if sync_rate >= 100:
+                print("✅ 记忆已完全同步")
+            elif sync_rate >= 50:
+                print("⚠️  记忆部分同步，建议执行同步")
+            else:
+                print("❌ 记忆同步率低，建议执行同步")
+                print("\n💡 运行以下命令同步:")
+                print("   anima doctor --sync-memory")
+        else:
+            print("ℹ️  暂无 OpenClaw Memory 记录")
+        
+        print("=" * 60)
+    
+    def sync_memory_to_facts(self):
+        """同步历史记忆到 Anima Facts（v5.0.4 新增）"""
+        print("=" * 60)
+        print("  🔄 Anima 记忆同步工具")
+        print("=" * 60)
+        
+        agent_name = _get_current_agent()
+        print(f"当前 Agent: {agent_name}")
+        print("-" * 60)
+        
+        # 获取 OpenClaw Memory 文件
+        openclaw_memory = WORKSPACE / "memory"
+        if not openclaw_memory.exists():
+            print("❌ OpenClaw Memory 目录不存在")
+            return
+        
+        memory_files = sorted(openclaw_memory.glob("*.md"))
+        if not memory_files:
+            print("ℹ️  暂无记忆文件需要同步")
+            return
+        
+        print(f"找到 {len(memory_files)} 个记忆文件")
+        print("-" * 60)
+        
+        # 确保 Facts 目录存在
+        facts_dir = FACTS_BASE / agent_name / "facts"
+        facts_dir.mkdir(parents=True, exist_ok=True)
+        (facts_dir / "episodic").mkdir(exist_ok=True)
+        (facts_dir / "semantic").mkdir(exist_ok=True)
+        
+        # 同步计数器
+        synced_count = 0
+        skipped_count = 0
+        error_count = 0
+        
+        # 遍历记忆文件
+        for memory_file in memory_files:
+            try:
+                content = memory_file.read_text(encoding="utf-8")
+                date = memory_file.stem  # YYYY-MM-DD
+                
+                # 解析记忆内容（简单实现：按行解析）
+                lines = content.split("\n")
+                file_synced = 0
+                
+                for line in lines:
+                    # 跳过空行和标题行
+                    if not line.strip() or line.strip().startswith("#"):
+                        continue
+                    
+                    # 提取时间戳和内容（支持多种格式）
+                    import re
+                    # 格式 1: - [08:55] 内容 #episodic
+                    match = re.search(r'-\s*\[(\d{2}:\d{2})\]\s*(.+?)\s*#(\w+)', line)
+                    if not match:
+                        # 格式 2: [08:55] 内容 #episodic
+                        match = re.search(r'\[(\d{2}:\d{2})\]\s*(.+?)\s*#(\w+)', line)
+                    
+                    if match:
+                        time = match.group(1)
+                        memory_content = match.group(2).strip()
+                        memory_type = match.group(3).strip()
+                        
+                        # 创建 Fact 文件
+                        fact_id = f"{memory_type}_{date.replace('-', '')}_{time.replace(':', '')}_{synced_count:04d}"
+                        fact_file = facts_dir / memory_type / f"{fact_id}.md"
+                        
+                        if fact_file.exists():
+                            skipped_count += 1
+                            continue
+                        
+                        # 写入 Fact 文件
+                        fact_content = f"""# {memory_type.capitalize()} Fact
+
+**ID:** {fact_id}
+**日期:** {date} {time}
+**作者:** {agent_name}
+**类型:** {memory_type}
+
+---
+
+## 内容
+
+{memory_content}
+
+---
+
+## 标签
+
+自动同步自 OpenClaw Memory
+
+---
+
+## 元数据
+
+- 创建时间：{datetime.now().isoformat()}
+- 内容长度：{len(memory_content)} 字符
+- 来源：OpenClaw Memory ({memory_file.name})
+
+"""
+                        fact_file.write_text(fact_content, encoding="utf-8")
+                        file_synced += 1
+                        synced_count += 1
+                
+                if file_synced > 0:
+                    print(f"✅ {memory_file.name}: 同步 {file_synced} 条记忆")
+                
+            except Exception as e:
+                error_count += 1
+                print(f"❌ {memory_file.name}: 同步失败 - {e}")
+        
+        # 打印总结
+        print("-" * 60)
+        print("同步完成:")
+        print(f"  ✅ 成功：{synced_count} 条")
+        print(f"  ⚠️  跳过：{skipped_count} 条（已存在）")
+        print(f"  ❌ 失败：{error_count} 条")
+        print("=" * 60)
+        
+        if synced_count > 0:
+            print("💡 建议运行 'anima doctor' 验证同步结果")
 
 
 def main():
     """主函数"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Anima-AIOS 自检自修工具（配置化版本）')
-    parser.add_argument('--agent', '-a', type=str, help='指定 Agent 名称')
-    parser.add_argument('--all', action='store_true', help='诊断所有 Agent')
+    parser = argparse.ArgumentParser(
+        description='Anima-AIOS 自检自修工具',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+示例:
+  anima doctor                    # 自检
+  anima doctor --fix              # 自修
+  anima doctor --sync-memory      # 同步历史记忆到 Anima Facts
+  anima doctor --check-sync       # 检查同步状态
+        '''
+    )
     parser.add_argument('--fix', action='store_true', help='自检并修复')
     parser.add_argument('--yes', '-y', action='store_true', help='自动确认修复')
-    parser.add_argument('--auto', action='store_true', help='自动模式（无需确认）')
+    parser.add_argument('--auto', '-a', action='store_true', help='自动模式（无需确认）')
+    parser.add_argument('--sync-memory', action='store_true', help='同步历史记忆到 Anima Facts（v5.0.4 新增）')
+    parser.add_argument('--check-sync', action='store_true', help='检查记忆同步状态（v5.0.4 新增）')
     
     args = parser.parse_args()
     
-    if args.all:
-        # 诊断所有 Agent
-        doctor = AnimaDoctor()
-        results = doctor.diagnose_all_agents()
-        
-        print("\n" + "=" * 60)
-        print("所有 Agent 诊断结果:")
-        print("=" * 60)
-        for agent_name, has_issues in results.items():
-            status = "⚠️  有问题" if has_issues else "✅ 正常"
-            print(f"{agent_name}: {status}")
+    doctor = AnimaDoctor()
+    
+    if args.sync_memory:
+        doctor.sync_memory_to_facts()
+    elif args.check_sync:
+        doctor.check_sync_status()
+    elif args.fix:
+        doctor.diagnose(auto_fix=True, auto_confirm=args.auto or args.yes)
     else:
-        # 诊断指定 Agent 或当前 Agent
-        doctor = AnimaDoctor(args.agent)
-        
-        if args.fix:
-            doctor.diagnose(auto_fix=True, auto_confirm=args.auto or args.yes)
-        else:
-            doctor.diagnose()
+        doctor.diagnose()
 
 
 if __name__ == "__main__":

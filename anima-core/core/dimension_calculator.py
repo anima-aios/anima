@@ -14,8 +14,8 @@ Memora v4.0 - Dimension Calculator
 5. 协作认知 (Collaboration)
 
 Author: 枢衡
-Date: 2026-03-20
-Version: 5.0.0
+Date: 2026-03-22
+Version: 5.0.3
 """
 
 import json

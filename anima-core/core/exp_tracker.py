@@ -12,8 +12,8 @@ Memora v4.0 - EXP Tracker v2
 - 质量系数（基于内容长度、类型）
 
 Author: 枢衡
-Date: 2026-03-20
-Version: 5.0.0
+Date: 2026-03-22
+Version: 5.0.3
 """
 
 import json
@@ -88,9 +88,16 @@ class EXPTracker:
         limit = self.DAILY_EXP_LIMITS.get(dimension, 50)
         
         # 修复 Bug 006：质量系数不应导致更容易触达上限
+        # 修复 Bug v5.0.3：质量系数 <1 时不惩罚，保证最小 base_exp
         # 基础 EXP 计入上限，质量奖励作为额外奖励（不占上限）
         base_exp_to_add = min(exp, limit - current_exp)  # 基础 EXP 受上限限制
-        quality_bonus = exp * (quality_multiplier - 1.0)  # 质量奖励部分
+        
+        # v5.0.3 修复：质量系数只奖励不惩罚
+        # quality_multiplier > 1 时才有奖励，< 1 时只是没有奖励（但不扣减）
+        if quality_multiplier > 1.0:
+            quality_bonus = exp * (quality_multiplier - 1.0)  # 质量奖励部分
+        else:
+            quality_bonus = 0.0  # 质量系数 <1 时不惩罚，保证 base_exp
         
         # 质量奖励也受剩余空间限制，但不影响基础 EXP
         if current_exp + base_exp_to_add >= limit:
@@ -105,7 +112,10 @@ class EXPTracker:
             remaining_after_base = limit - (current_exp + base_exp_to_add)
             quality_bonus_to_add = min(quality_bonus, remaining_after_base)
             final_exp = base_exp_to_add + quality_bonus_to_add
-            message = f"添加 EXP {final_exp:.1f}（基础 {base_exp_to_add:.1f} + 质量奖励 {quality_bonus_to_add:.1f}）"
+            if quality_bonus > 0:
+                message = f"添加 EXP {final_exp:.1f}（基础 {base_exp_to_add:.1f} + 质量奖励 {quality_bonus_to_add:.1f}）"
+            else:
+                message = f"添加 EXP {final_exp:.1f}（基础 EXP，质量系数 {quality_multiplier}）"
         
         # 创建记录
         record = {
