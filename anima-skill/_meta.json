@@ -1,6 +1,6 @@
 {
   "name": "anima-aios",
-  "version": "5.0.9",
+  "version": "5.0.10",
   "description": "Anima-AIOS: AI Agent 认知操作系统 — 记忆管理、经验值成长、认知画像、每日任务，让 AI Agent 的成长可见、可量、可追踪。",
   "author": "liruoZhou",
   "repository": "https://github.com/anima-aios/anima",
@@ -17,9 +17,6 @@
     "openclaw"
   ],
   "main": "SKILL.md",
-  "scripts": {
-    "postinstall": "bash post-install.sh"
-  },
   "requirements": {
     "system": [
       "python3 (>=3.8)",
@@ -40,7 +37,6 @@
     "🏥 Doctor 自检自修工具"
   ],
   "dataDirectory": "~/.anima",
-  "autoInstall": true,
   "changelog": {
     "v5.0.5": "修复 Doctor 硬编码 workspace 路径，支持自动��测",
     "v5.0.4": "OpenClaw 身份集成，SOUL.md/IDENTITY.md 自动解析",

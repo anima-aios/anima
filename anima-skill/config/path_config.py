@@ -26,7 +26,7 @@ class Config:
     
     # 默认路径（Linux）
     DEFAULT_FACTS_BASE = '/home/画像'
-    DEFAULT_OPENCLAW_BASE = '/root/.openclaw'
+    DEFAULT_OPENCLAW_BASE = os.path.expanduser('~/.openclaw')
     
     def __init__(self, facts_base: Optional[str] = None, 
                  openclaw_base: Optional[str] = None):
@@ -73,7 +73,7 @@ class Config:
         
         # 自动检测
         if self.is_linux:
-            return Path('/root/.openclaw')
+            return Path(os.path.expanduser('~/.openclaw'))
         elif self.is_macos:
             username = os.getenv('USER', 'user')
             return Path(f'/Users/{username}/.openclaw')
