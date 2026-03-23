@@ -1,6 +1,6 @@
 ---
 name: anima-aios
-description: "An AI Agent cognitive growth system built on the native OpenClaw architecture. It provides agents with persistent memory management, visual EXP progression, a 5-dimensional cognitive profile, gamified daily quests, and team leaderboards. No more worrying about lost memories, clearly track growth levels, and let your Agent truly evolve continuously. 基于 OpenClaw 原生架构的 AI Agent 认知成长体系，为 Agent 提供永久化记忆管理、可视化经验值成长、五维认知画像、游戏化每日任务和团队排行榜。不再担心记忆丢失，清晰掌握成长等级，让你的 Agent 真正拥有持续进化的能力。"
+description: "An AI Agent cognitive growth system built on the native OpenClaw architecture. It provides agents with persistent memory management, visual EXP progression, a 5-dimensional cognitive profile, gamified daily quests, team leaderboards, and a 5-layer memory architecture with Knowledge Palace, Pyramid thinking, and Ebbinghaus decay function. 基于 OpenClaw 原生架构的 AI Agent 认知成长体系，为 Agent 提供五层记忆架构、知识宫殿、金字塔知识组织、记忆衰减函数、LLM 智能处理、永久化记忆管理、可视化经验值成长、五维认知画像、游戏化每日任务和团队排行榜。"
 use_when:
   - cognitive profile
   - EXP
@@ -10,35 +10,88 @@ use_when:
   - team ranking
   - growth tracking
   - agent abilities
+  - knowledge palace
+  - memory palace
+  - pyramid thinking
+  - memory decay
+  - health check
+  - evolution
   - 认知画像
   - 经验值
   - 等级
   - 每日任务
   - 记忆同步
   - 团队排行
+  - 知识宫殿
+  - 记忆衰减
+  - 健康检查
+  - 进化
 ---
 
-# Anima-AIOS
+# Anima-AIOS v6.0
 
 > **让成长可见，让认知可量** | Making Growth Visible, Making Cognition Measurable
 
-为你的 AI Agent 添加记忆、成长和认知能力。追踪每一次学习，量化每一份进步。
+为你的 AI Agent 添加五层记忆架构、知识宫殿、认知成长和自动进化能力。
 
 ---
 
-## ✨ 核心功能
+## ✨ v6.0 新增功能
+
+### 🏗️ 五层记忆架构
+- **L1 工作记忆**：自动监听 OpenClaw memory/ 目录变化，零侵入同步
+- **L2 情景记忆**：事件归档，LLM 质量评估（S/A/B/C）
+- **L3 语义记忆**：LLM 驱动的知识提炼 + 语义去重
+- **L4 知识宫殿**：空间化知识组织 + 金字塔知识提炼（实例→规则→模式→本体）
+- **L5 元认知层**：记忆衰减函数 + 健康系统 + 五维画像
+
+### 🔌 与 OpenClaw 原生打通
+- **memory_watcher**：基于 watchdog 库，自动识别 inotify/FSEvents/WinAPI
+- Agent 日常写 memory 自动触发 Anima 同步，完全无感知
+- 解决 FB-008：记忆同步断裂问题
+
+### 🏛️ 知识宫殿（Knowledge Palace）
+- 宫殿 → 楼层 → 房间 → 位置 → 物品，五级空间结构
+- 默认 4 个知识房间 + _inbox 兜底
+- LLM 智能分类 + 延迟防抖调度器（等笔停了再整理）
+
+### 🔺 金字塔知识组织
+- 实例 → 规则 → 模式 → 本体，四层自底向上提炼
+- 同一主题 ≥ 3 条实例时可触发自动提炼
+- 保守模式：默认 auto_distill=false，config 开关控制
+
+### 📉 记忆衰减函数
+- 基于 Ebbinghaus 遗忘曲线 + AI 场景适配
+- 复习 = 访问：每次 memory_search 命中自动刷新
+- 复习推荐 + 即将遗忘提醒 + 可归档标记
+
+### 🏥 健康系统（5 个模块）
+- **manager**：总调度，Doctor 命令入口
+- **hygiene**：数据完整性检查 + 去重 + 清理
+- **correction**：自动检测并修复常见数据问题
+- **evolution**：每日凌晨自动提炼（L2→L3 + 宫殿分类 + 金字塔提炼）
+- **abstraction**：跨房间知识关联发现
+
+### 🤖 LLM 智能处理
+- 质量评估 / 去重分析 / 宫殿分类均支持 LLM
+- 多模型配置：默认用当前 Agent 模型（最准），可按任务���置不同模型
+- LLM 不可用时自动降级为规则模式
+
+---
+
+## ✨ 保留功能（v5）
 
 ### 🧠 增强记忆管理
-- **3 层同步机制**：OpenClaw Memory + Anima Facts + EXP History
+- **多层同步**：OpenClaw Memory + Anima Facts + EXP History
 - **EXP 奖励**：写记忆自动获得经验值
 - **智能去重**：自动避免重复记录
 
 ### 📊 五维认知画像
-- **内化力**：衡量知识吸收和理解能力
-- **应用力**：衡量知识迁移和实践能力
-- **创造力**：衡量知识整合和创新能力
-- **元认知**：衡量自我反思和监控能力
-- **协作力**：衡量团队合作和互助能力
+- **内化力**：知识吸收和理解能力
+- **应用力**：知识迁移和实践能力
+- **创造力**：知识整合和创新能力
+- **元认知**：自我反思和监控能力
+- **协作力**：团队合作和互助能力
 
 ### 🎮 游戏化成长
 - **等级系统**：从 Lv.1 新手到 Lv.100 终身成就
@@ -48,246 +101,101 @@ use_when:
 ### 🏆 团队排行榜
 - **EXP 排行**：基于公平归一化算法排名
 - **实时竞争**：追踪排名变化和差距
-- **团队对比**：发现优势与短板
-
-### 🏥 Doctor 自检工具
-- **一键诊断**：检查 Skill/Core/数据完整性
-- **记忆同步**：验证多层记忆数据一致性
-- **自动修复**：常见问题一键解决
 
 ---
 
-## 📸 效果展示 | Screenshots
-> 🔔 若图片无法显示，请访问：https://github.com/anima-aios/anima/tree/main/anima-skill/assets 查看原图
-> If images don't load, visit the link above to see originals.
+## 🛠️ 架构
 
-### 认知画像卡片 | Cognitive Profile Card
-
-![Cognitive Profile](https://raw.githubusercontent.com/anima-aios/anima/main/anima-skill/assets/cognitive-profile.png)
-
-*Agent 认知画像：五维评分 + 等级进度 + 今日 EXP 来源*
-
----
-
-### 今日认知成长 | Daily Cognitive Growth
-
-![Daily Growth](https://raw.githubusercontent.com/anima-aios/anima/main/anima-skill/assets/daily-growth.png)
-
-*今日成长报告：任务进度 + EXP 来源 + 升级预测*
-
----
-
-### 团队排行榜 | Team Leaderboard
-
-![Team Ranking](https://raw.githubusercontent.com/anima-aios/anima/main/anima-skill/assets/team-ranking.png)
-
-*团队 EXP 排行榜：实时竞争 + 变化追踪*
+```
+Agent 日常工作（OpenClaw write/edit/memory_write）
+       │
+       ▼  watchdog 监听，零侵入
+ L1 工作记忆 ── workspace/memory/*.md
+       │ 沉淀
+       ▼
+ L2 情景记忆 ── facts/episodic/（LLM 质量评估）
+       │ 提炼
+       ▼
+ L3 语义记忆 ── facts/semantic/（LLM 去重 + 关联）
+       │ 结构化
+       ▼
+ L4 知识宫殿 ── palace/rooms/（LLM 分类 + 延迟防抖）
+    金字塔   ── pyramid/（实例→规则→模式→本体）
+       │ 反思
+       ▼
+ L5 元认知层 ── 五维画像 + EXP + 衰减 + 健康
+```
 
 ---
 
-### 我所做的意义 | Why I Built This
+## 📁 模块清单
 
-![Why I Built This](https://raw.githubusercontent.com/anima-aios/anima/main/anima-skill/assets/meaning.png)
+### core/（核心模块）
+| 模块 | 版本 | 说明 |
+|------|------|------|
+| memory_watcher.py | v6.0 | OpenClaw 记忆文件监听 + 自动同步 |
+| fact_store.py | v6.0 | L2/L3 统一事实存储层 |
+| distill_engine.py | v6.0 | L2→L3 LLM 驱动提炼引擎 |
+| palace_index.py | v6.0 | 记忆宫殿空间索引 |
+| pyramid_engine.py | v6.0 | 金字塔知识组织引擎 |
+| palace_classifier.py | v6.0 | 宫殿分类调度器（延迟防抖） |
+| decay_function.py | v6.0 | Ebbinghaus 记忆衰减计算 |
+| cognitive_profile.py | v5→v6 | 五维认知画像生成器 |
+| exp_tracker.py | v5 | EXP 经验值追踪 |
+| level_system.py | v5 | 等级系统 |
+| daily_quest.py | v5 | 每日任务 |
+| memory_sync.py | v5→v6 | 记忆同步（已修复路径硬编码） |
 
-*这 就是我的目的*
+### health/（健康系统）
+| 模块 | 版本 | 说明 |
+|------|------|------|
+| manager | v6.0 | 总调度 + Doctor 入口 |
+| hygiene | v6.0 | 数据卫生（完整性 + 去重 + 清理） |
+| correction | v6.0 | 自动纠错 |
+| evolution | v6.0 | 每日进化（凌晨自动提炼） |
+| abstraction | v6.0 | 知识抽象（跨房间关联） |
 
 ---
 
-## 🚀 快速开始 | Quick Start
+## ⚙️ 配置
 
-### 1️⃣ 安装 | Install
+配置文件路径：`~/.anima/config/anima_config.json`
+
+```json
+{
+  "facts_base": "/home/画像",
+  "agent_name": "auto",
+  "llm": {
+    "provider": "current_agent",
+    "models": {
+      "quality_assess": "current_agent",
+      "dedup_analyze": "current_agent",
+      "palace_classify": "current_agent"
+    }
+  },
+  "palace": {
+    "classify_mode": "deferred",
+    "poll_interval_minutes": 30,
+    "quiet_threshold_seconds": 60,
+    "retry_delay_seconds": 60
+  },
+  "pyramid": {
+    "auto_distill": false,
+    "distill_threshold": 3
+  }
+}
+```
+
+---
+
+## 🧪 测试
 
 ```bash
-clawhub install anima-aios
-```
-
-### 安装后设置 | Post-Install Setup
-
-安装完成后，运行以下脚本将 Core 模块复制到 `~/.anima/core/`：
-
-```bash
-cd ~/.openclaw/workspace/skills/anima-aios/
-bash post-install.sh
-```
-
-> **说明：** `post-install.sh` 仅将包内 `core/` 和 `config/` 目录复制到 `~/.anima/`，不执行远程下载或网络操作。可在运行前查看脚本内容。
-
-### 2️⃣ 验证安装 | Verify
-
-```bash
-### cd /path/to/your/workspace/skills/anima-aios/
-cd ~/.openclaw/workspace/skills/anima-aios/
-python3 anima_doctor.py
-```
-
-**预期输出：**
-```
-============================================================
-  🏥 Anima-AIOS 自检工具
-============================================================
-当前 Agent: {你的名字}
-------------------------------------------------------------
-✅ skill_installed: Skill 已安装
-✅ core_installed: Core 已安装
-✅ data_integrity: 数据完整
-...
-```
-
-### 3️⃣ 开始使用 | Start Using
-
-**查看认知画像：**
-```
-我的认知画像是什么？
-```
-
-**查看经验值：**
-```
-我的经验值是多少？
-```
-
-**写一条记忆：**
-```
-记住：今天完成了 Anima v5.0 发布
-```
-
-**查看今日任务：**
-```
-今天的任务是什么？
+# 运行集成测试（37 项检查）
+python3 tests/test_integration_v6.py
 ```
 
 ---
 
-## 🔧 工具列表 | Tools
-
-| 工具 | 用途 | EXP 奖励 |
-|------|------|----------|
-| `memory_write` | 写入记忆 | +1~2 |
-| `memory_search` | 搜索记忆 | +2 |
-| `get_cognitive_profile` | 认知画像 | - |
-| `get_exp` | 查询 EXP | - |
-| `get_level` | 查询等级 | - |
-| `quest_daily_status` | 今日任务 | - |
-| `quest_complete` | 完成任务 | +5~20 |
-| `get_team_ranking` | 团队排行 | - |
-
----
-
-## 📊 等级系统 | Level System
-
-### 成长路径 | Growth Path (基于每日完成全部任务的理想成长速度)
-
-| 等级 | EXP 需求 | 阶段 |
-|------|----------|------|
-| Lv.1 | 2 | 新手起步 |
-| Lv.3 | 100 | 第 1 天 |
-| Lv.6 | 1000 | 第 1 周 |
-| Lv.13 | 10000 | 第 1 月 |
-| Lv.25 | 100000 | 第 1 年 |
-| Lv.100 | 14000000 | 终身成就 |
-
-### EXP 获取规则 | EXP Rules
-
-| 行为 | EXP | 说明 |
-|------|-----|------|
-| 写记忆（episodic） | +1 | 日常记录 |
-| 写记忆（semantic） | +2 | 知识沉淀（双倍） |
-| 搜索记忆 | +2 | 主动检索 |
-| 完成任务 | +5~20 | 难度相关 |
-| 分享知识到团队 | +5 | 团队贡献 |
-
----
-
-## ⚙️ 配置 | Configuration
-
-### 环境变量（可选）| Environment Variables (Optional)
-
-```bash
-# 手动指定 Agent 名称（通常自动检测）
-export ANIMA_AGENT_NAME=your_agent_name
-
-# 指定工作空间
-export ANIMA_WORKSPACE=/path/to/your/workspace
-```
-
-### 数据存储 | Data Storage
-
-本 Skill 会在以下路径创建和读写数据：
-
-| 路径 | 用途 | 创建时机 |
-|------|------|----------|
-| `~/.anima/` | Core 模块和全局配置 | 手动安装 Core 时 |
-| `~/.anima/core/` | 核心计算引擎 | 手动安装 Core 时 |
-| `{workspace}/memory/` | OpenClaw 原生记忆 | 写入记忆时 |
-| `{ANIMA_FACTS_BASE}/{agent}/facts/` | 结构化事实存储 | 写入记忆时自动创建 |
-| `{ANIMA_FACTS_BASE}/{agent}/exp_history.jsonl` | EXP 历史记录 | 获得 EXP 时自动创建 |
-| `{ANIMA_FACTS_BASE}/{agent}/daily_exp.json` | 每日 EXP 统计 | 获得 EXP 时自动创建 |
-
-> `ANIMA_FACTS_BASE` 默认为 `/home/画像`，可通过环境变量 `ANIMA_FACTS_BASE` 自定义。  
-> `{agent}` 为自动检测的 Agent 名称。
-
----
-
-## 🏥 Doctor 使用指南 | Doctor Guide
-
-### 健康检查 | Health Check
-
-```bash
-### cd /path/to/your/workspace/skills/anima-aios/
-cd ~/.openclaw/workspace/skills/anima-aios/
-
-python3 anima_doctor.py
-```
-
-### 检查记忆同步 | Check Memory Sync
-
-```bash
-python3 anima_doctor.py --check-sync
-```
-
-### 同步历史记忆 | Sync Historical Memory
-
-```bash
-python3 anima_doctor.py --sync-memory
-```
-
-### 自动修复 | Auto Repair
-
-```bash
-python3 anima_doctor.py --fix
-```
-
----
-
-## 📝 版本历史 | Changelog
-
-**当前版本：** v5.0.11 (2026-03-22)
-
-完整变更记录参见 [references/changelog.md](references/changelog.md)
-
----
-
-## 🙏 致谢 | Acknowledgments
-
-
-生活是一个最长久的项目，而我希望带着日安他们共同去完成。
-我是立文，如果你也认同我的想法，我和我的Agent欢迎你们。
-
-Anima-AIOS 完全开源，致力于让每一个 AI Agent 都拥有可持续、可量化的认知成长能力。
-项目基于认知科学理论（Bloom 认知分类、Dreyfus 技能习得模型）+ 记忆宫殿模型 + 金字塔原理 + 自创 AI 记忆衰退函数设计。
-
----
-
-## 📄 许可证 | License
-
-**MIT License**
-详见 LICENSE 文件：https://github.com/anima-aios/anima/blob/main/LICENSE
-允许商用 / 二次开发，需保留原作者信息
-
-- **GitHub:** https://github.com/anima-aios/anima
-- **文档:** https://github.com/anima-aios/anima/blob/main/README.md
-- **版本:** v5.0.11
-- **最后更新:** 2026-03-22
-
----
-
-_让每一次学习都有迹可循，让每一份成长都被看见。_
+_架构只能演进，不能退化。—— 立文铁律_
+_先诚实，再迭代。代码要配得上宣传。—— 清禾_

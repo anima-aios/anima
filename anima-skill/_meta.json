@@ -1,46 +1,6 @@
 {
-  "name": "anima-aios",
-  "version": "5.0.11",
-  "description": "Anima-AIOS: AI Agent 认知操作系统 — 记忆管理、经验值成长、认知画像、每日任务，让 AI Agent 的成长可见、可量、可追踪。",
-  "author": "liruoZhou",
-  "repository": "https://github.com/anima-aios/anima",
-  "license": "MIT",
-  "keywords": [
-    "aios",
-    "memory",
-    "cognitive",
-    "exp",
-    "growth",
-    "profile",
-    "quest",
-    "agent",
-    "openclaw"
-  ],
-  "main": "SKILL.md",
-  "requirements": {
-    "system": [
-      "python3 (>=3.8)",
-      "git"
-    ],
-    "pip": [
-      "pytest (optional)",
-      "requests (optional)"
-    ]
-  },
-  "features": [
-    "🧠 增强记忆管理（3 层同步 + EXP 奖励）",
-    "📊 五维认知画像（内化/应用/创造/元认知/协作）",
-    "🎮 每日任务系统（游戏化成长）",
-    "🏆 等级与排行榜（团队公平比较）",
-    "🔐 数据保护（5 层安全机制）",
-    "🔗 OpenClaw 身份集成（零配置）",
-    "🏥 Doctor 自检自修工具"
-  ],
-  "dataDirectory": "~/.anima",
-  "changelog": {
-    "v5.0.5": "修复 Doctor 硬编码 workspace 路径，支持自动��测",
-    "v5.0.4": "OpenClaw 身份集成，SOUL.md/IDENTITY.md 自动解析",
-    "v5.0.3": "修复 EXP 计算 Bug，3 层同步机制修复",
-    "v5.0.6": "修复五维认知画像维度分配 Bug（creation/metacognition/collaboration 为 0）"
-  }
+  "ownerId": "kn7aebmvtwr0yh7eevaxy6g4qx81t5zk",
+  "slug": "anima-aios",
+  "version": "6.0.0",
+  "publishedAt": 1774204599243
 }

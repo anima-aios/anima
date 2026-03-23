@@ -101,7 +101,12 @@ class CognitiveProfileGenerator:
                 'raw_score': raw_scores.get(dimension, 0)
             }
         
-        # 7. 构建完整画像
+        # 7. 获取 EXP 信息（修复 FB-007：profile['exp'] KeyError）
+        exp_info = level_info_raw.get('total_exp', 0)
+        if isinstance(exp_info, dict):
+            exp_info = exp_info.get('total', 0)
+        
+        # 8. 构建完整画像
         profile = {
             'agent': self.agent_name,
             'generated_at': datetime.now().isoformat(),
@@ -112,6 +117,7 @@ class CognitiveProfileGenerator:
             'level': level_info['level'],
             'stage': level_info['stage'],
             'badge': level_info['badge'],
+            'exp': exp_info,  # FB-007 修复：确保 exp 字段存在
             
             'statistics': statistics,
             

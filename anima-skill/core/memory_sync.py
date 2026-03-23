@@ -25,7 +25,18 @@ class MemorySync:
             agent_name: Agent 名称
         """
         self.agent_name = agent_name
-        self.workspace_mem = Path(os.path.expanduser("~/.openclaw/workspace-shuheng/memory"))
+        # 自动检测 workspace 路径，不硬编码
+        workspace_name = os.getenv("ANIMA_WORKSPACE_NAME", "")
+        if not workspace_name:
+            # 自动扫描：查找 ~/.openclaw/workspace-*/memory/ 目录
+            openclaw_dir = Path(os.path.expanduser("~/.openclaw"))
+            candidates = list(openclaw_dir.glob("workspace-*/memory"))
+            if candidates:
+                self.workspace_mem = candidates[0]
+            else:
+                self.workspace_mem = openclaw_dir / "workspace" / "memory"
+        else:
+            self.workspace_mem = Path(os.path.expanduser(f"~/.openclaw/workspace-{workspace_name}/memory"))
         self.portrait_mem = Path(f"/home/画像/{agent_name}/memory")
         
         # 确保画像目录存在
