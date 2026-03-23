@@ -27,8 +27,13 @@ if ! command -v git &> /dev/null; then
 fi
 echo "✅ Git $(git --version | cut -d' ' -f3)"
 
+# 安装 Python 依赖
+echo "[3/4] 安装 Python 依赖..."
+pip3 install -q "watchdog>=3.0.0" 2>/dev/null || pip install -q "watchdog>=3.0.0" 2>/dev/null || echo "⚠️ watchdog 安装失败，memory_watcher 将使用 polling 模式"
+echo "✅ Python 依赖检查完成"
+
 # 安装 Core（本地复制，不远程克隆）
-echo "[3/3] 安装 Anima Core..."
+echo "[4/4] 安装 Anima Core..."
 if [ -d "$ANIMA_HOME/core" ] && [ -f "$ANIMA_HOME/core/exp_tracker.py" ]; then
     echo "✅ Core 已安装，检查更新..."
     # 覆盖更新

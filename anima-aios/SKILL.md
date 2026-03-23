@@ -191,6 +191,9 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
 ## 🧪 测试
 
 ```bash
+# 安装依赖（memory_watcher 需要）
+pip install "watchdog>=3.0.0"
+
 # 运行集成测试（37 项检查）
 python3 tests/test_integration_v6.py
 ```
