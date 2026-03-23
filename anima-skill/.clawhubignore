@@ -1,6 +1,0 @@
-__pycache__/
-*.pyc
-*.bak
-*.bak.*
-.DS_Store
-test-integration.py
