@@ -1,8 +1,9 @@
 {
   "ownerId": "kn7aebmvtwr0yh7eevaxy6g4qx81t5zk",
   "slug": "anima-aios",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "publishedAt": 1774204599243,
+  "homepage": "https://github.com/anima-aios/anima",
   "requirements": {
     "python": ["watchdog>=3.0.0"]
   }

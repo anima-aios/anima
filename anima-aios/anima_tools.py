@@ -478,10 +478,14 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
             next_exp = _calculate_next_level_exp(level)
             progress = int((total_exp / next_exp) * 100) if next_exp > 0 else 0
             
+            # 计算认知总分（五维加权平均）
+            cognitive_score = round(sum(dimensions.values()) / max(len(dimensions), 1), 2)
+            
             return {
                 "agent": profile["agent"],
                 "level": level,
                 "intimacy": total_exp,
+                "cognitiveScore": cognitive_score,
                 "nextLevelExp": next_exp,
                 "progress": f"{progress}%",
                 "dimensions": dimensions,

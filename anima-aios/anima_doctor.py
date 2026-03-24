@@ -493,6 +493,10 @@ class AnimaDoctor:
             if self._reinstall_core():
                 fixes.append('core_reinstalled')
         
+        # 5. 全员生成 cognitive_profile（v6.1 新增）
+        if self._generate_all_profiles():
+            fixes.append('profiles_generated')
+        
         # 打印修复结果
         print("-" * 60)
         if fixes:
@@ -558,6 +562,33 @@ class AnimaDoctor:
         print("⚠️  请手动重新安装 Core：")
         print(f"   cd {SKILL_DIR}")
         print(f"   bash post-install.sh")
+        return False
+    
+    def _generate_all_profiles(self):
+        """全员生成 cognitive_profile（v6.1 新增，解决 BUG-001）"""
+        try:
+            sys.path.insert(0, str(SKILL_DIR / "core"))
+            from cognitive_profile import CognitiveProfileGenerator
+            
+            generated = 0
+            for agent_dir in FACTS_BASE.iterdir():
+                if not agent_dir.is_dir():
+                    continue
+                if agent_dir.name.startswith('.') or agent_dir.name == 'shared':
+                    continue
+                
+                try:
+                    generator = CognitiveProfileGenerator(agent_dir.name, facts_base=str(FACTS_BASE))
+                    generator.generate_profile(auto_scan=False, auto_save=True)
+                    generated += 1
+                except Exception:
+                    pass
+            
+            if generated > 0:
+                print(f"✅ 已为 {generated} 个 Agent 生成/更新认知画像")
+                return True
+        except Exception as e:
+            print(f"⚠️  画像生成失败: {e}")
         return False
     
     def check_sync_status(self):
@@ -736,7 +767,8 @@ def main():
         epilog='''
 示例:
   anima doctor                    # 自检
-  anima doctor --fix              # 自修
+  anima doctor --fix              # 自修（交互确认）
+  anima doctor --fix --yes        # 自修（无需确认，适合非交互环境）
   anima doctor --sync-memory      # 同步历史记忆到 Anima Facts
   anima doctor --check-sync       # 检查同步状态
         '''
