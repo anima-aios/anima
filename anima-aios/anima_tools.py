@@ -499,7 +499,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
     return {
         "agent": agent_name,
         "level": exp_data["level"],
-        "intimacy": exp_data["totalExp"],
+        "exp": exp_data["totalExp"],
         "nextLevelExp": _calculate_next_level_exp(exp_data["level"]),
         "progress": "N/A (core 未安装)",
         "dimensions": {
@@ -899,11 +899,11 @@ def get_team_ranking(team_name: str = "all") -> Dict:
             agents_exp.append({
                 "agent": agent,
                 "level": exp_data["level"],
-                "intimacy": exp_data["totalExp"]
+                "exp": exp_data["totalExp"]
             })
     
     # 按 EXP 排序
-    agents_exp.sort(key=lambda x: x["intimacy"], reverse=True)
+    agents_exp.sort(key=lambda x: x["exp"], reverse=True)
     
     # 添加排名
     rankings = []
@@ -1147,7 +1147,7 @@ def _add_exp_fallback(agent_name: str, dimension: str, exp: int, action: str, de
         "agent": agent_name,
         "dimension": dimension,
         "action": action,
-        "intimacy": round(final_exp, 2),
+        "exp": round(final_exp, 2),
         "base_exp": exp,
         "quality_multiplier": quality_multiplier,
         "details": details
