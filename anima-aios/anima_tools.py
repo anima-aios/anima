@@ -60,18 +60,16 @@ WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/wo
 # 事实数据路径（facts_base）
 # 动态获取 facts_base（优先环境变量 > 配置���件 > 系统检测）
 def _get_facts_base() -> Path:
+    """获取 facts 基础路径，复用 path_config 逻辑"""
+    try:
+        from config.path_config import Config
+        return Config().facts_base
+    except ImportError:
+        pass
+    # 降级：直接检测
     env = os.getenv("ANIMA_FACTS_BASE")
     if env:
         return Path(env)
-    config_file = Path(os.path.expanduser("~/.anima/config/anima_config.json"))
-    if config_file.exists():
-        try:
-            with open(config_file) as f:
-                cfg = json.load(f)
-            if cfg.get("facts_base"):
-                return Path(cfg["facts_base"])
-        except Exception:
-            pass
     import platform
     if platform.system() == "Darwin":
         return Path(os.path.expanduser("~/画像"))
@@ -104,7 +102,7 @@ def memory_search_v2(query: str, type: str = "all", maxResults: int = 10, agent_
         {
             "results": [...],
             "count": int,
-            "intimacyReward": 2,
+            "expReward": 2,
             "message": "搜索完成，+2 亲密度"
         }
     """
@@ -128,7 +126,7 @@ def memory_search_v2(query: str, type: str = "all", maxResults: int = 10, agent_
     return {
         "results": results,
         "count": len(results),
-        "intimacyReward": exp_reward,
+        "expReward": exp_reward,
         "message": f"搜索完成，找到 {len(results)} 条记忆，+{exp_reward} 亲密度"
     }
 
@@ -198,7 +196,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     Returns:
         {
             "factId": "xxx",
-            "intimacyReward": 2,
+            "expReward": 2,
             "quality": "A",
             "message": "记忆已保存，+2 亲密度（semantic）"
         }
@@ -210,7 +208,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     if _check_duplicate(content, agent_name):
         return {
             "factId": None,
-            "intimacyReward": 0,
+            "expReward": 0,
             "quality": "N/A",
             "message": "⚠️ 检测到相似记忆，已跳过",
             "duplicate": True
@@ -258,7 +256,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     
     return {
         "factId": fact_id,
-        "intimacyReward": exp_reward,
+        "expReward": exp_reward,
         "quality": quality,
         "tags": tags,
         "message": f"记忆已保存，+{exp_reward} 亲密度（{type}, {quality}级）",
@@ -422,7 +420,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
         {
             "agent": "YourAgent",
             "level": 10,
-            "intimacy": 5060,
+            "exp": 5060,
             "nextLevelExp": 6400,
             "progress": "79%",
             "dimensions": {
@@ -484,7 +482,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
             return {
                 "agent": profile["agent"],
                 "level": level,
-                "intimacy": total_exp,
+                "exp": total_exp,
                 "cognitiveScore": cognitive_score,
                 "nextLevelExp": next_exp,
                 "progress": f"{progress}%",
@@ -501,7 +499,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
     return {
         "agent": agent_name,
         "level": exp_data["level"],
-        "intimacy": exp_data["totalIntimacy"],
+        "intimacy": exp_data["totalExp"],
         "nextLevelExp": _calculate_next_level_exp(exp_data["level"]),
         "progress": "N/A (core 未安装)",
         "dimensions": {
@@ -521,7 +519,7 @@ def get_exp(  # 对外返回亲密度(agent_name: str = "current") -> Dict:
     
     Returns:
         {
-            "totalIntimacy": 5060,
+            "totalExp": 5060,
             "todayIntimacy": 45,
             "level": 10,
             "breakdown": {
@@ -557,7 +555,7 @@ def get_level(agent_name: str = "current") -> Dict:
     
     exp_data = _get_exp_simple(agent_name)
     level = exp_data["level"]
-    current_exp = exp_data["totalIntimacy"]
+    current_exp = exp_data["totalExp"]
     next_exp = _calculate_next_level_exp(level)
     
     progress = int((current_exp / next_exp) * 100) if next_exp > 0 else 0
@@ -610,7 +608,7 @@ def _get_exp_simple(agent_name: str) -> Dict:
     level = max(1, int(total_exp ** 0.28))
     
     return {
-        "totalIntimacy": total_exp,
+        "totalExp": total_exp,
         "todayIntimacy": today_exp,
         "level": level,
         "breakdown": breakdown
@@ -665,7 +663,7 @@ def quest_daily_status(agent_name: str = "current") -> Dict:
                     "id": "q1",
                     "title": "写一条记忆",
                     "difficulty": "easy",
-                    "intimacyReward": 5,
+                    "expReward": 5,
                     "status": "completed"
                 },
                 ...
@@ -706,7 +704,7 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
     Returns:
         {
             "success": True,
-            "intimacyReward": 10,
+            "expReward": 10,
             "message": "任务完成，+10 亲密度"
         }
     """
@@ -744,7 +742,7 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
             _save_quests(quests, quest_file)
             
             # 奖励 EXP（根据任务类型分配维度）
-            exp_reward = quest["intimacyReward"]
+            exp_reward = quest["expReward"]
             # 维度分配：根据任务难度和类型
             quest_dimension_map = {
                 "写一条记忆": "understanding",
@@ -763,7 +761,7 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
             
             return {
                 "success": True,
-                "intimacyReward": exp_reward,
+                "expReward": exp_reward,
                 "message": f"任务完成，+{exp_reward} EXP"
             }
     
@@ -778,13 +776,13 @@ def _generate_daily_quests(agent_name: str) -> List[Dict]:
     import random
     
     quest_templates = [
-        {"title": "写一条记忆", "difficulty": "easy", "intimacyReward": 5},
-        {"title": "搜索记忆 3 次", "difficulty": "medium", "intimacyReward": 10},
-        {"title": "完成一次代码提交", "difficulty": "medium", "intimacyReward": 10},
-        {"title": "写工作日志", "difficulty": "easy", "intimacyReward": 5},
-        {"title": "分享知识到团队", "difficulty": "hard", "intimacyReward": 20},
-        {"title": "代码审查", "difficulty": "medium", "intimacyReward": 10},
-        {"title": "写技术文档", "difficulty": "hard", "intimacyReward": 15},
+        {"title": "写一条记忆", "difficulty": "easy", "expReward": 5},
+        {"title": "搜索记忆 3 次", "difficulty": "medium", "expReward": 10},
+        {"title": "完成一次代码提交", "difficulty": "medium", "expReward": 10},
+        {"title": "写工作日志", "difficulty": "easy", "expReward": 5},
+        {"title": "分享知识到团队", "difficulty": "hard", "expReward": 20},
+        {"title": "代码审查", "difficulty": "medium", "expReward": 10},
+        {"title": "写技术文档", "difficulty": "hard", "expReward": 15},
     ]
     
     # 随机选择 3 个任务
@@ -796,7 +794,7 @@ def _generate_daily_quests(agent_name: str) -> List[Dict]:
             "id": f"q{i+1}",
             "title": template["title"],
             "difficulty": template["difficulty"],
-            "intimacyReward": template["intimacyReward"],
+            "expReward": template["expReward"],
             "status": "pending"
         })
     
@@ -852,8 +850,8 @@ def _auto_check_quest(agent_name: str, action: str):
             if quest["title"] in matching_titles:
                 # 特殊处理：搜索 3 次需要累计
                 if quest["title"] == "搜索记忆 3 次":
-                    count = quest.get("_progress", 0) + 1
-                    quest["_progress"] = count
+                    count = quest.get("progress", 0) + 1
+                    quest["progress"] = count
                     if count >= 3:
                         quest["status"] = "completed"
                         quest["completedAt"] = datetime.now().isoformat()
@@ -883,7 +881,7 @@ def get_team_ranking(team_name: str = "all") -> Dict:
         {
             "team": "all",
             "rankings": [
-                {"rank": 1, "agent": "YourAgent", "level": 10, "intimacy": 5060},
+                {"rank": 1, "agent": "YourAgent", "level": 10, "exp": 5060},
                 ...
             ]
         }
@@ -897,15 +895,15 @@ def get_team_ranking(team_name: str = "all") -> Dict:
     
     for agent in known_agents:
         exp_data = _get_exp_simple(agent)
-        if exp_data["totalIntimacy"] > 0:
+        if exp_data["totalExp"] > 0:
             agents_exp.append({
                 "agent": agent,
                 "level": exp_data["level"],
-                "intimacy": exp_data["totalIntimacy"]
+                "intimacy": exp_data["totalExp"]
             })
     
     # 按 EXP 排序
-    agents_exp.sort(key=lambda x: x["exp"], reverse=True)
+    agents_exp.sort(key=lambda x: x["intimacy"], reverse=True)
     
     # 添加排名
     rankings = []
