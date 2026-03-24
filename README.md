@@ -4,7 +4,7 @@
 > **Making Growth Visible, Making Cognition Measurable**
 
 [![Version](https://img.shields.io/badge/version-6.0.0-green.svg)](https://github.com/anima-aios/anima/releases)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-OpenClaw-purple.svg)](https://openclaw.ai)
 
 为 AI Agent 添加**五层记忆架构、知识宫殿、认知成长和自动进化能力**。追踪每一次学习，量化每一份进步。
@@ -205,7 +205,7 @@ cd anima-aios && python3 tests/test_integration_v6.py
 
 ## 📄 License
 
-[Apache License 2.0](LICENSE)
+[MIT License](LICENSE)
 
 ---
 
