@@ -147,6 +147,15 @@ CORE_DIR = ANIMA_HOME / "core"  # Core 是全局共享的
 
 def _get_current_agent() -> str:
     """
+    获取当前 Agent 名称（优先使用 agent_resolver 公共模块）
+    """
+    try:
+        sys.path.insert(0, str(SKILL_DIR / "core"))
+        from agent_resolver import resolve_agent_name
+        return resolve_agent_name()
+    except ImportError:
+        pass
+    """
     获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
     
     优先级（立文指定）：

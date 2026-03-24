@@ -46,8 +46,14 @@ from typing import Dict, List, Optional
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from .palace_index import PalaceIndex
-from .fact_store import FactStore, Fact
+try:
+    from .palace_index import PalaceIndex
+except ImportError:
+    from palace_index import PalaceIndex
+try:
+    from .fact_store import FactStore, Fact
+except ImportError:
+    from fact_store import FactStore, Fact
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +70,10 @@ class PalaceClassifier:
                  config: Dict = None, llm_config: Dict = None):
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.config = config or {}

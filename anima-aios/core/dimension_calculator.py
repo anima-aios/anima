@@ -95,7 +95,10 @@ class DimensionCalculator:
         """
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name
@@ -303,9 +306,30 @@ class DimensionCalculator:
             memory_dir = ws / "memory"
             if not memory_dir.exists():
                 continue
-            # 检查 workspace 是否属于当前 agent
+            # 检查 workspace 是否属于当前 agent（支持中文名 vs 英文目录）
             ws_name = ws.name.replace("workspace-", "").replace("workspace", "main")
-            if ws_name != self.agent_name and self.agent_name not in str(ws):
+            matched = (ws_name == self.agent_name or self.agent_name in str(ws))
+            if not matched:
+                # 尝试从 SOUL.md/IDENTITY.md 解析中文名匹配
+                try:
+                    try:
+                        from .agent_resolver import parse_soul_file, parse_identity_file
+                    except ImportError:
+                        from agent_resolver import parse_soul_file, parse_identity_file
+                    soul = ws / "SOUL.md"
+                    if soul.exists():
+                        cn_name = parse_soul_file(soul)
+                        if cn_name == self.agent_name:
+                            matched = True
+                    if not matched:
+                        identity = ws / "IDENTITY.md"
+                        if identity.exists():
+                            cn_name = parse_identity_file(identity)
+                            if cn_name == self.agent_name:
+                                matched = True
+                except ImportError:
+                    pass
+            if not matched:
                 continue
             
             for md_file in memory_dir.glob("*.md"):

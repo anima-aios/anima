@@ -198,7 +198,10 @@ class HealthEvolution:
     def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                from config.path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.log_file = Path(facts_base) / agent_name / "health" / "evolution-log.jsonl"
@@ -218,7 +221,10 @@ class HealthEvolution:
 
         # Step 1: L2→L3 提炼
         try:
-            from ..core.distill_engine import DistillEngine
+            try:
+                from ..core.distill_engine import DistillEngine
+            except ImportError:
+                from distill_engine import DistillEngine
             engine = DistillEngine(self.agent_name, self.facts_base)
             distill_result = engine.run(batch_size=50)
             stats["steps"]["distill"] = distill_result
@@ -227,7 +233,10 @@ class HealthEvolution:
 
         # Step 2: 宫殿分类
         try:
-            from ..core.palace_classifier import PalaceClassifier
+            try:
+                from ..core.palace_classifier import PalaceClassifier
+            except ImportError:
+                from palace_classifier import PalaceClassifier
             classifier = PalaceClassifier(self.agent_name, self.facts_base)
             unclassified = classifier.get_unclassified()
             if unclassified:
@@ -240,7 +249,10 @@ class HealthEvolution:
 
         # Step 3: 金字塔自动提炼
         try:
-            from ..core.pyramid_engine import PyramidEngine
+            try:
+                from ..core.pyramid_engine import PyramidEngine
+            except ImportError:
+                from pyramid_engine import PyramidEngine
             pyramid = PyramidEngine(self.agent_name, self.facts_base, auto_distill=True)
             topics = pyramid.get_topics()
             distilled_topics = 0
@@ -266,13 +278,19 @@ class HealthAbstraction:
                  llm_config: Dict = None):
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                from config.path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.llm = None
         if llm_config:
             try:
-                from ..core.distill_engine import LLMClient
+                try:
+                    from ..core.distill_engine import LLMClient
+                except ImportError:
+                    from distill_engine import LLMClient
                 self.llm = LLMClient(llm_config)
             except ImportError:
                 pass
@@ -282,7 +300,10 @@ class HealthAbstraction:
         发现跨房间的知识关联
         """
         try:
-            from ..core.palace_index import PalaceIndex
+            try:
+                from ..core.palace_index import PalaceIndex
+            except ImportError:
+                from palace_index import PalaceIndex
             palace = PalaceIndex(self.agent_name, self.facts_base)
         except ImportError:
             return []
@@ -334,7 +355,10 @@ class HealthManager:
                  llm_config: Dict = None):
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                from config.path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.hygiene = HealthHygiene(agent_name, facts_base)
@@ -362,8 +386,14 @@ class HealthManager:
 
         # 3. 衰减状态
         try:
-            from ..core.decay_function import DecayManager
-            from ..core.fact_store import FactStore
+            try:
+                from ..core.decay_function import DecayManager
+            except ImportError:
+                from decay_function import DecayManager
+            try:
+                from ..core.fact_store import FactStore
+            except ImportError:
+                from fact_store import FactStore
             store = FactStore(self.agent_name, self.facts_base)
             decay = DecayManager(self.agent_name, self.facts_base)
 
@@ -386,7 +416,10 @@ class HealthManager:
 
         # 4. 宫殿状态
         try:
-            from ..core.palace_index import PalaceIndex
+            try:
+                from ..core.palace_index import PalaceIndex
+            except ImportError:
+                from palace_index import PalaceIndex
             palace = PalaceIndex(self.agent_name, self.facts_base)
             report["modules"]["palace"] = palace.get_stats()
         except Exception as e:
@@ -394,7 +427,10 @@ class HealthManager:
 
         # 5. 金字塔状态
         try:
-            from ..core.pyramid_engine import PyramidEngine
+            try:
+                from ..core.pyramid_engine import PyramidEngine
+            except ImportError:
+                from pyramid_engine import PyramidEngine
             pyramid = PyramidEngine(self.agent_name, self.facts_base)
             report["modules"]["pyramid"] = pyramid.get_stats()
         except Exception as e:

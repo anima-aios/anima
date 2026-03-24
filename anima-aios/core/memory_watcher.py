@@ -38,7 +38,13 @@ import time
 import hashlib
 import logging
 from pathlib import Path
-from ..config.path_config import get_config
+try:
+    from ..config.path_config import get_config
+except ImportError:
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent.parent / 'config'))
+    from path_config import get_config
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
@@ -149,7 +155,10 @@ class MemoryWatcher:
         if name and name != "auto":
             return name
         # 委托给统一的 agent_resolver
-        from .agent_resolver import resolve_agent_name
+        try:
+            from .agent_resolver import resolve_agent_name
+        except ImportError:
+            from agent_resolver import resolve_agent_name
         return resolve_agent_name()
     def _detect_watch_dir(self) -> Path:
         """自动检测要监听的 memory 目录"""

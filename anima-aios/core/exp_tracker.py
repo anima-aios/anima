@@ -69,7 +69,10 @@ class EXPTracker:
         """
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name

@@ -290,7 +290,10 @@ def main():
         card = card_gen.generate_simple_card(profile)
     elif mode == 'comparison':
         # 需要扫描团队
-        from team_scanner import TeamScanner
+        try:
+            from .team_scanner import TeamScanner
+        except ImportError:
+            from team_scanner import TeamScanner
         scanner = TeamScanner()
         active_agents = scanner.scan_active_agents()
         

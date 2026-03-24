@@ -32,9 +32,18 @@ from typing import Dict, List, Optional
 from pathlib import Path
 from datetime import datetime
 
-from .dimension_calculator import DimensionCalculator
-from .normalization_engine import NormalizationEngine
-from .level_system import LevelSystem
+try:
+    from .dimension_calculator import DimensionCalculator
+except ImportError:
+    from dimension_calculator import DimensionCalculator
+try:
+    from .normalization_engine import NormalizationEngine
+except ImportError:
+    from normalization_engine import NormalizationEngine
+try:
+    from .level_system import LevelSystem
+except ImportError:
+    from level_system import LevelSystem
 
 
 class CognitiveProfileGenerator:
@@ -51,7 +60,10 @@ class CognitiveProfileGenerator:
         """
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name
@@ -83,7 +95,10 @@ class CognitiveProfileGenerator:
         
         # 2. 自动扫描团队（如果启用）
         if auto_scan and team_scores is None:
-            from team_scanner import TeamScanner
+            try:
+                from .team_scanner import TeamScanner
+            except ImportError:
+                from team_scanner import TeamScanner
             scanner = TeamScanner()
             active_agents = scanner.scan_active_agents()
             

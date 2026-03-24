@@ -34,7 +34,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 import sys
-from .fact_store import FactStore, Fact, QualityGrade
+try:
+    from .fact_store import FactStore, Fact, QualityGrade
+except ImportError:
+    from fact_store import FactStore, Fact, QualityGrade
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +96,10 @@ class LLMClient:
     @staticmethod
     def _detect_agent_name() -> str:
         """从环境变量或 workspace 路径自动检测当前 Agent 名称（委托给公共模块）"""
-        from .agent_resolver import resolve_agent_name
+        try:
+            from .agent_resolver import resolve_agent_name
+        except ImportError:
+            from agent_resolver import resolve_agent_name
         return resolve_agent_name()
     
     @staticmethod
@@ -212,7 +218,10 @@ class DistillEngine:
                  llm_config: Dict = None):
         self.agent_name = agent_name
         if facts_base is None:
-            from ..config.path_config import get_config
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.store = FactStore(agent_name, facts_base)

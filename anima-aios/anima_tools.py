@@ -513,7 +513,7 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
     }
 
 
-def get_exp(  # 对外返回亲密度(agent_name: str = "current") -> Dict:
+def get_exp(agent_name: str = "current") -> Dict:  # 对外返回亲密度
     """
     查询 EXP 详情
     
@@ -821,7 +821,7 @@ def _auto_check_quest(agent_name: str, action: str):
     """
     try:
         today = datetime.now().strftime("%Y-%m-%d")
-        quest_file = FACTS_BASE / agent_name / "quests" / f"{today}.json"
+        quest_file = ANIMA_HOME / agent_name / "quests" / f"{today}.json"
         
         if not quest_file.exists():
             return

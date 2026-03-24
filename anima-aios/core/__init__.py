@@ -14,12 +14,30 @@
 
 # Memora v4.0 Phase 5 - Core Modules
 
-from .normalization_engine import NormalizationEngine
-from .dimension_calculator import DimensionCalculator
-from .cognitive_profile import CognitiveProfileGenerator
-from .exp_tracker import EXPTracker
-from .team_scanner import TeamScanner
-from .profile_card import ProfileCardGenerator
+try:
+    from .normalization_engine import NormalizationEngine
+except ImportError:
+    from normalization_engine import NormalizationEngine
+try:
+    from .dimension_calculator import DimensionCalculator
+except ImportError:
+    from dimension_calculator import DimensionCalculator
+try:
+    from .cognitive_profile import CognitiveProfileGenerator
+except ImportError:
+    from cognitive_profile import CognitiveProfileGenerator
+try:
+    from .exp_tracker import EXPTracker
+except ImportError:
+    from exp_tracker import EXPTracker
+try:
+    from .team_scanner import TeamScanner
+except ImportError:
+    from team_scanner import TeamScanner
+try:
+    from .profile_card import ProfileCardGenerator
+except ImportError:
+    from profile_card import ProfileCardGenerator
 
 __all__ = [
     'NormalizationEngine',

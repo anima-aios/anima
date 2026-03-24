@@ -96,6 +96,12 @@ class LevelSystem:
             facts_base: facts 基础路径
         """
         self.agent_name = agent_name
+        if facts_base is None:
+            try:
+                from ..config.path_config import get_config
+            except ImportError:
+                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.agent_dir = Path(facts_base) / agent_name
         self.exp_file = self.agent_dir / 'exp_history.jsonl'
         self.level_file = self.agent_dir / 'level.json'

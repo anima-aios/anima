@@ -41,7 +41,13 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 # 导入路径配置
-from ..config.path_config import get_config
+try:
+    from ..config.path_config import get_config
+except ImportError:
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).parent.parent / 'config'))
+    from path_config import get_config
 
 
 class SessionScanner:
@@ -66,7 +72,10 @@ class SessionScanner:
         if agent_dir_name in cls.AGENT_NAME_MAP:
             return cls.AGENT_NAME_MAP[agent_dir_name]
         
-        from .agent_resolver import parse_soul_file, parse_identity_file
+        try:
+            from .agent_resolver import parse_soul_file, parse_identity_file
+        except ImportError:
+            from agent_resolver import parse_soul_file, parse_identity_file
         
         ws_name = f"workspace-{agent_dir_name}" if agent_dir_name != "main" else "workspace"
         ws_path = openclaw_base / ws_name
