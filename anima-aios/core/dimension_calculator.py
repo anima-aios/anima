@@ -238,7 +238,7 @@ class DimensionCalculator:
                 # 检查作者
                 try:
                     content = shared_file.read_text(encoding='utf-8')
-                    if f'作者：{self.agent_name}' in content or f'author: {self.agent_name}' in content.lower():
+                    if self.agent_name in content:
                         file_date = self._extract_date_from_filename(shared_file.name)
                         if file_date and start_date and file_date < start_date:
                             continue

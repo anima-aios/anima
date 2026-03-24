@@ -100,7 +100,10 @@ class LevelSystem:
             try:
                 from ..config.path_config import get_config
             except ImportError:
-                import sys as _s; _s.path.insert(0, str(__import__('pathlib').Path(__file__).parent.parent / 'config')); from path_config import get_config
+                import sys as _s
+                from pathlib import Path as _P
+                _s.path.insert(0, str(_P(__file__).parent.parent / 'config'))
+                from path_config import get_config
             facts_base = str(get_config().facts_base)
         self.agent_dir = Path(facts_base) / agent_name
         self.exp_file = self.agent_dir / 'exp_history.jsonl'

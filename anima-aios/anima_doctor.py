@@ -155,19 +155,7 @@ def _get_current_agent() -> str:
         return resolve_agent_name()
     except ImportError:
         pass
-    """
-    获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
-    
-    优先级（立文指定）：
-    1. ANIMA_AGENT_NAME 环境变量          ← 手动覆盖
-    2. ANIMA_WORKSPACE 环境变量           ← OpenClaw 注入
-    3. 解析 SOUL.md                       ← OpenClaw 身份 ⭐
-    4. 解析 IDENTITY.md                   ← OpenClaw 身份 ⭐
-    5. 工作目录路径解析                   ← 自动检测
-    6. 自动扫描 /home/画像/               ← 降级
-    7. 默认值 "Agent"                     ← 最终降级
-    """
-    import os
+        import os
     import re
     
     # 1. 环境变量（手动覆盖，最高优先级）

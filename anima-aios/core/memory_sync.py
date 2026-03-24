@@ -52,7 +52,12 @@ class MemorySync:
         else:
             self.workspace_mem = Path(os.path.expanduser(f"~/.openclaw/workspace-{workspace_name}/memory"))
         # 获取 facts_base（支持环境变量和配置文件）
-        from ..config.path_config import get_config
+        try:
+            from ..config.path_config import get_config
+        except ImportError:
+            import sys as _s
+            _s.path.insert(0, str(__import__("pathlib").Path(__file__).parent.parent / "config"))
+            from path_config import get_config
         _cfg = get_config()
         self.portrait_mem = _cfg.facts_base / agent_name / "memory"
         
@@ -183,6 +188,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         agent_name = sys.argv[1]
     else:
-        agent_name = "枢衡"
+        try:
+            from .agent_resolver import resolve_agent_name
+        except ImportError:
+            from agent_resolver import resolve_agent_name
+        agent_name = resolve_agent_name()
     
     sync_memory_on_startup(agent_name)
