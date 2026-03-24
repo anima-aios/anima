@@ -49,15 +49,21 @@ class LLMClient:
     2. openclaw agent 命令调用（降级方案）
     3. 返回空字符串（规则模式降级）
     
+    支持任何 OpenAI 兼容 API（百炼、OpenAI、Ollama、vLLM、LiteLLM 等）
+    
     配置示例（~/.anima/config/anima_config.json）：
     {
         "llm": {
-            "provider": "dashscope",
-            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "base_url": "https://api.openai.com/v1",
             "api_key": "sk-xxx",
-            "default_model": "qwen-plus"
+            "default_model": "gpt-4o-mini"
         }
     }
+    
+    更多示例：
+    - 百炼：base_url="https://dashscope.aliyuncs.com/compatible-mode/v1", model="qwen-plus"
+    - Ollama：base_url="http://localhost:11434/v1", model="llama3", api_key="ollama"
+    - vLLM：base_url="http://localhost:8000/v1", model="your-model", api_key="token"
     """
     
     def __init__(self, config: Dict = None):
@@ -107,12 +113,12 @@ class LLMClient:
     def _call_api(self, prompt: str, task: str = "default", max_tokens: int = 500) -> str:
         """通过 OpenAI 兼容 API 直连调用 LLM"""
         base_url = self.config.get("base_url")
-        api_key = self.config.get("api_key") or os.getenv("ANIMA_LLM_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+        api_key = self.config.get("api_key") or os.getenv("ANIMA_LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
         
         if not base_url or not api_key:
             return ""
         
-        model = self.config.get("models", {}).get(task) or self.config.get("default_model", "qwen-plus")
+        model = self.config.get("models", {}).get(task) or self.config.get("default_model", "")
         
         import urllib.request
         import json as _json
