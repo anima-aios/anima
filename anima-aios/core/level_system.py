@@ -121,7 +121,7 @@ class LevelSystem:
                     record = json.loads(line.strip())
                     exp = record.get('exp', 0)
                     total_exp += exp
-                except:
+                except Exception:
                     continue
         
         return total_exp

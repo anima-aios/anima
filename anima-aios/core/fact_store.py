@@ -124,7 +124,7 @@ class Fact:
             tags_raw = meta.get('tags', '[]')
             try:
                 tags = json.loads(tags_raw)
-            except:
+            except Exception:
                 tags = [t.strip() for t in tags_raw.strip('[]').split(',') if t.strip()]
             
             return cls(

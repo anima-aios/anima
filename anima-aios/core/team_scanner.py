@@ -152,7 +152,7 @@ class TeamScanner:
                                 file_date = datetime.strptime(date_str, '%Y-%m-%d')
                                 if last_date is None or file_date > last_date:
                                     last_date = file_date
-            except:
+            except Exception:
                 pass
         
         # 3. 检查 daily_quests 目录
@@ -178,7 +178,7 @@ class TeamScanner:
                         file_date = file_date.replace(tzinfo=None)
                         if last_date is None or file_date > last_date:
                             last_date = file_date
-            except:
+            except Exception:
                 pass
         
         return last_date
@@ -193,14 +193,14 @@ class TeamScanner:
         if match:
             try:
                 return datetime.strptime(match.group(1), '%Y-%m-%d')
-            except:
+            except Exception:
                 pass
         
         # 尝试从文件修改时间
         try:
             mtime = file_path.stat().st_mtime
             return datetime.fromtimestamp(mtime)
-        except:
+        except Exception:
             pass
         
         return None

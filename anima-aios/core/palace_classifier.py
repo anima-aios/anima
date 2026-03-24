@@ -44,6 +44,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from palace_index import PalaceIndex
 from fact_store import FactStore, Fact
 

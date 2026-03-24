@@ -330,7 +330,7 @@ def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool
         return False
     
     # 计算内容哈希
-    content_hash = hash(content)
+    import hashlib; content_hash = hashlib.md5(content.encode()).hexdigest()
     
     # 检查今日记忆文件（第 1 层）
     today = datetime.now().strftime("%Y-%m-%d")

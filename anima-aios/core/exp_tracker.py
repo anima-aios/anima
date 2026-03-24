@@ -170,7 +170,7 @@ class EXPTracker:
                     record = json.loads(line.strip())
                     if record.get('date') == date and record.get('dimension') == dimension:
                         total += record.get('exp', 0)
-                except:
+                except Exception:
                     continue
         
         return total
@@ -183,7 +183,7 @@ class EXPTracker:
             try:
                 with open(self.daily_exp_file, 'r', encoding='utf-8') as f:
                     daily_exp = json.load(f)
-            except:
+            except Exception:
                 daily_exp = {}
         
         # 更新
@@ -234,7 +234,7 @@ class EXPTracker:
                         continue
                     
                     history.append(record)
-                except:
+                except Exception:
                     continue
         
         return history
@@ -272,7 +272,7 @@ class EXPTracker:
                 if date in daily_exp:
                     summary['dimensions'] = daily_exp[date]
                     summary['total'] = sum(daily_exp[date].values())
-            except:
+            except Exception:
                 pass
         
         return summary

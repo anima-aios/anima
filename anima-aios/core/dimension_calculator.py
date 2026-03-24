@@ -169,7 +169,7 @@ class DimensionCalculator:
                     # 检查是否有标签
                     if '#tag=' in content or '## 标签' in content:
                         score += 0.5
-                except:
+                except Exception:
                     pass
         
         return score
@@ -209,7 +209,7 @@ class DimensionCalculator:
                                 score += 10.0
                             elif action == 'knowledge_reuse':
                                 score += 3.0
-                    except:
+                    except Exception:
                         continue
         
         return score
@@ -240,7 +240,7 @@ class DimensionCalculator:
                             continue
                         
                         score += 5.0
-                except:
+                except Exception:
                     pass
         
         # 从 exp_history 统计其他创造行为
@@ -265,7 +265,7 @@ class DimensionCalculator:
                                 score += 4.0
                             elif action == 'knowledge_cited':
                                 score += 2.0
-                    except:
+                    except Exception:
                         continue
         
         return score
@@ -318,7 +318,7 @@ class DimensionCalculator:
                                 score += 3.0
                             elif action == 'progress_tracking':
                                 score += 2.0
-                    except:
+                    except Exception:
                         continue
         
         return score
@@ -359,7 +359,7 @@ class DimensionCalculator:
                                 score += 4.0
                             elif action == 'code_review':
                                 score += 3.0
-                    except:
+                    except Exception:
                         continue
         
         return score
@@ -425,7 +425,7 @@ class DimensionCalculator:
                             stats['weekly_reviews'] += 1
                         elif action == 'collab_task':
                             stats['collab_tasks'] += 1
-                    except:
+                    except Exception:
                         continue
         
         return stats

@@ -28,6 +28,7 @@ Anima Doctor - Anima-AIOS 自检自修工具
 """
 
 import os
+import re
 import sys
 import json
 from pathlib import Path
@@ -383,9 +384,9 @@ class AnimaDoctor:
         
         # 检查 Python 包
         try:
-            import inotify
+            import watchdog
         except ImportError:
-            missing_deps.append('inotify')
+            missing_deps.append('watchdog')
         
         try:
             import requests

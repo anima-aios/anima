@@ -32,11 +32,17 @@ Version: 6.0.0
 """
 
 import os
+import sys
 import json
 import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
+
+# 确保 core/ 在 sys.path 中，以支持裸相对导入
+_core_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "core")
+if _core_dir not in sys.path:
+    sys.path.insert(0, _core_dir)
 
 logger = logging.getLogger(__name__)
 

@@ -273,7 +273,7 @@ class DailyQuestSystem:
                     content = shared_file.read_text(encoding='utf-8')
                     if f'作者：{self.agent_name}' in content:
                         count += 1
-                except:
+                except Exception:
                     continue
         
         # 从 exp_history 统计协作行为

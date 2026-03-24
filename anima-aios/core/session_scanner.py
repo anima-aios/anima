@@ -38,7 +38,7 @@ Version: 5.0.0
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # 导入路径配置
 import sys

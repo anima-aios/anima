@@ -299,7 +299,7 @@ def main():
             try:
                 gen = CognitiveProfileGenerator(agent)
                 profiles.append(gen.generate_profile())
-            except:
+            except Exception:
                 continue
         
         card = card_gen.generate_comparison_card(profiles)
