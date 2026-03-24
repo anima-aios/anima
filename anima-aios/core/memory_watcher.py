@@ -38,6 +38,7 @@ import time
 import hashlib
 import logging
 from pathlib import Path
+from ..config.path_config import get_config
 from datetime import datetime
 from typing import Dict, List, Optional, Set
 
@@ -103,7 +104,7 @@ class MemoryWatcher:
         # 路径配置
         self.facts_base = Path(os.getenv(
             "ANIMA_FACTS_BASE",
-            self.config.get("facts_base", "/home/画像")
+            self.config.get("facts_base") or str(get_config().facts_base)
         ))
         self.agent_name = self._detect_agent_name()
         self.agent_dir = self.facts_base / self.agent_name
@@ -142,24 +143,14 @@ class MemoryWatcher:
         return {}
     
     def _detect_agent_name(self) -> str:
-        """自动���测当前 Agent 名称"""
-        # 优先级：环境变量 > 配置文件 > workspace 名称推断
-        name = os.getenv("ANIMA_AGENT_NAME", "")
-        if name:
-            return name
-        
+        """自动检测当前 Agent 名称（委托给公共模块）"""
+        # 优先：配置文件中的 agent_name
         name = self.config.get("agent_name", "")
         if name and name != "auto":
             return name
-        
-        # 从 workspace 目录名推断
-        openclaw_dir = Path.home() / ".openclaw"
-        for ws in openclaw_dir.glob("workspace-*"):
-            if (ws / "memory").exists():
-                return ws.name.replace("workspace-", "")
-        
-        return "unknown"
-    
+        # 委托给统一的 agent_resolver
+        from .agent_resolver import resolve_agent_name
+        return resolve_agent_name()
     def _detect_watch_dir(self) -> Path:
         """自动检测要监听的 memory 目录"""
         # 优先级：环境变量 > 配置文件 > 自动扫描

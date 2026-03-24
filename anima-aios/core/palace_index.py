@@ -52,7 +52,7 @@ class PalaceIndex:
         "decision": {"name": "决策记录", "keywords": ["决策", "方案", "选型", "权衡", "取舍", "原则", "铁律", "decision", "tradeoff", "principle"]},
     }
     
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         self.palace_dir = Path(facts_base) / agent_name / "palace"
         self.index_file = self.palace_dir / "index.json"

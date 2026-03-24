@@ -79,7 +79,7 @@ class DecayManager:
         "archive": 0.1        # < 0.1 可归档
     }
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         self.decay_dir = Path(facts_base) / agent_name / "decay"
         self.cache_file = self.decay_dir / "strength_cache.json"

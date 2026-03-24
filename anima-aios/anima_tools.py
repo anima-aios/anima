@@ -20,8 +20,8 @@ Anima-AIOS Skill - Tool Implementations
 OpenClaw Skill 工具实现
 
 提供以下工具：
-- memory_search_v2: 增强版记忆搜索（+2 EXP）
-- memory_write_v2: 增强版记忆写入（自动 EXP 奖励 + 3 层同步）
+- memory_search_v2: 增强版记忆搜索（+2 亲密度）
+- memory_write_v2: 增强版记忆写入（自动 亲密度奖励 + 3 层同步）
 - get_cognitive_profile: 获取认知画像
 - get_exp: 查询 EXP 详情
 - get_level: 查询等级信息
@@ -30,7 +30,7 @@ OpenClaw Skill 工具实现
 
 修复记录：
 - v5.0.3 (2026-03-22): 修复 3 层同步机制 Bug
-  - Bug 1: C 级质量 EXP 计算为 0 → 分离 base_exp 和 quality_multiplier
+  - Bug 1: C 级质量 亲密度计算为 0 → 分离 base_exp 和 quality_multiplier
   - Bug 2: 只写入第 1 层 → 新增第 2 层 Anima Facts 同步
   - Bug 3: 维度命名不一致 → 统一使用 core 标准维度名
 
@@ -58,7 +58,24 @@ if ANIMA_HOME.exists():
 WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
 
 # 事实数据路径（facts_base）
-FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", "/home/画像"))
+# 动态获取 facts_base（优先环境变量 > 配置���件 > 系统检测）
+def _get_facts_base() -> Path:
+    """获取 facts 基础路径，复用 path_config 逻辑"""
+    try:
+        from config.path_config import Config
+        return Config().facts_base
+    except ImportError:
+        pass
+    # 降级：直接检测
+    env = os.getenv("ANIMA_FACTS_BASE")
+    if env:
+        return Path(env)
+    import platform
+    if platform.system() == "Darwin":
+        return Path(os.path.expanduser("~/画像"))
+    return Path("/home/画像")
+
+FACTS_BASE = _get_facts_base()
 
 
 # ============================================================================
@@ -73,7 +90,7 @@ def memory_search_v2(query: str, type: str = "all", maxResults: int = 10, agent_
     - 支持语义检索（如果配置了向量检索）
     - 支持时间范围过滤
     - 返回结果带相关性评分
-    - 自动奖励 +2 EXP
+    - 自动奖励 +2 亲密度
     
     Args:
         query: 搜索关键词
@@ -86,7 +103,7 @@ def memory_search_v2(query: str, type: str = "all", maxResults: int = 10, agent_
             "results": [...],
             "count": int,
             "expReward": 2,
-            "message": "搜索完成，+2 EXP"
+            "message": "搜索完成，+2 亲密度"
         }
     """
     # 解析 Agent 名称
@@ -96,18 +113,21 @@ def memory_search_v2(query: str, type: str = "all", maxResults: int = 10, agent_
     # 调用 core 的记忆搜索（这里简化实现，实际应集成 SiliconFlow 向量检索）
     results = _search_memory_simple(query, type, maxResults, agent_name)
     
-    # 记录 EXP（搜索记忆 +2 EXP）
+    # 记录亲密度（搜索记忆 +2 亲密度）
     exp_reward = 2
     _add_exp(agent_name, "application", exp_reward, "memory_search", {
         "query": query,
         "result_count": len(results)
     })
     
+    # 自动任务感知
+    _auto_check_quest(agent_name, "memory_search")
+    
     return {
         "results": results,
         "count": len(results),
         "expReward": exp_reward,
-        "message": f"搜索完成，找到 {len(results)} 条记忆，+{exp_reward} EXP"
+        "message": f"搜索完成，找到 {len(results)} 条记忆，+{exp_reward} 亲密度"
     }
 
 
@@ -155,16 +175,16 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     增强版记忆写入（v5.0.3 修复版）
     
     修复内容：
-    - ✅ Bug 1: EXP 计算错误 → 分离 base_exp 和 quality_multiplier
+    - ✅ Bug 1: 亲密度计算错误 → 分离 base_exp 和 quality_multiplier
     - ✅ Bug 2: 只写入第 1 层 → 新增第 2 层 Anima Facts 同步
     - ✅ Bug 3: 维度命名不一致 → 统一使用 core 标准维度名
     
     功能：
-    - 自动计算 EXP 奖励（episodic +1, semantic +2）
+    - 自动计算 亲密度奖励（episodic +1, semantic +2）
     - 自动提取摘要和标签
     - 质量检测（完整性、价值度）
     - 去重检测
-    - **3 层同步**: OpenClaw Memory + Anima Facts + EXP History
+    - **3 层同步**: OpenClaw Memory + Anima Facts + Intimacy History
     
     Args:
         content: 记忆内容
@@ -178,7 +198,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
             "factId": "xxx",
             "expReward": 2,
             "quality": "A",
-            "message": "记忆已保存，+2 EXP（semantic）"
+            "message": "记忆已保存，+2 亲密度（semantic）"
         }
     """
     if agent_name == "current":
@@ -202,7 +222,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     if quality == "auto":
         quality = _assess_quality(content)
     
-    # 计算 EXP 奖励（v5.0.3 修复：分离 base_exp 和 quality_multiplier）
+    # 计算 亲密度奖励（v5.0.3 修复：分离 base_exp 和 quality_multiplier）
     base_exp = 1 if type == "episodic" else 2
     quality_multiplier = {"S": 1.5, "A": 1.2, "B": 1.0, "C": 0.8}.get(quality, 1.0)
     # ✅ 修复：最终 EXP 由 core 层的 add_exp() 计算，传入 quality_multiplier
@@ -214,7 +234,7 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
     # ========== 第 2 层：写入 Anima Facts (v5.0.3 新增) ==========
     fact_id = _write_anima_fact(content, type, tags, agent_name)
     
-    # ========== 第 3 层：记录 EXP (v5.0.5 修复) ==========
+    # ========== 第 3 层：记录亲密度 (v5.0.5 修复) ==========
     # 维度分配规则：
     # - episodic（经历记忆）→ understanding（知识内化）
     # - semantic（知识记忆）→ creation（知识创造）
@@ -226,17 +246,20 @@ def memory_write_v2(content: str, type: str = "episodic", tags: Optional[List[st
         "fact_id": fact_id
     }, quality_multiplier=quality_multiplier)
     
-    # 计算最终 EXP 用于返回
+    # 计算最终亲密度用于返回
     exp_reward = int(base_exp * quality_multiplier)
     if exp_reward < 1:
-        exp_reward = 1  # 保证最小 1 EXP
+        exp_reward = 1  # 保证最小 1 亲密度
+    
+    # 自动任务感知
+    _auto_check_quest(agent_name, "memory_write")
     
     return {
         "factId": fact_id,
         "expReward": exp_reward,
         "quality": quality,
         "tags": tags,
-        "message": f"记忆已保存，+{exp_reward} EXP（{type}, {quality}级）",
+        "message": f"记忆已保存，+{exp_reward} 亲密度（{type}, {quality}级）",
         "sync": {
             "layer1_openclaw": "✅",
             "layer2_anima_facts": "✅",
@@ -453,10 +476,14 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
             next_exp = _calculate_next_level_exp(level)
             progress = int((total_exp / next_exp) * 100) if next_exp > 0 else 0
             
+            # 计算认知总分（五维加权平均）
+            cognitive_score = round(sum(dimensions.values()) / max(len(dimensions), 1), 2)
+            
             return {
                 "agent": profile["agent"],
                 "level": level,
                 "exp": total_exp,
+                "cognitiveScore": cognitive_score,
                 "nextLevelExp": next_exp,
                 "progress": f"{progress}%",
                 "dimensions": dimensions,
@@ -486,14 +513,14 @@ def get_cognitive_profile(agent_name: str = "current") -> Dict:
     }
 
 
-def get_exp(agent_name: str = "current") -> Dict:
+def get_exp(  # 对外返回亲密度(agent_name: str = "current") -> Dict:
     """
     查询 EXP 详情
     
     Returns:
         {
             "totalExp": 5060,
-            "todayExp": 45,
+            "todayIntimacy": 45,
             "level": 10,
             "breakdown": {
                 "memory_write": 2100,
@@ -582,14 +609,14 @@ def _get_exp_simple(agent_name: str) -> Dict:
     
     return {
         "totalExp": total_exp,
-        "todayExp": today_exp,
+        "todayIntimacy": today_exp,
         "level": level,
         "breakdown": breakdown
     }
 
 
 def _calculate_next_level_exp(level: int) -> int:
-    """计算下一级所需 EXP"""
+    """计算下一级所需亲密度"""
     # 反推公式：level = exp^0.28 => exp = level^(1/0.28)
     next_level = level + 1
     return int(next_level ** (1 / 0.28))
@@ -678,7 +705,7 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
         {
             "success": True,
             "expReward": 10,
-            "message": "任务完成，+10 EXP"
+            "message": "任务完成，+10 亲密度"
         }
     """
     if agent_name == "current":
@@ -781,6 +808,67 @@ def _save_quests(quests: List[Dict], quest_file: Path):
         json.dump(quests, f, ensure_ascii=False, indent=2)
 
 
+def _auto_check_quest(agent_name: str, action: str):
+    """
+    自动任务感知（v6.1 新增）
+    
+    在 memory_write/memory_search 等操作后自动检查是否完成了每日任务，
+    无需手动调 quest_complete。
+    
+    Args:
+        agent_name: Agent 名称
+        action: 刚执行的操作类型（memory_write / memory_search / code_commit）
+    """
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        quest_file = FACTS_BASE / agent_name / "quests" / f"{today}.json"
+        
+        if not quest_file.exists():
+            return
+        
+        with open(quest_file, "r", encoding="utf-8") as f:
+            quests = json.load(f)
+        
+        # 操作→任务标题的映射
+        action_quest_map = {
+            "memory_write": ["写一条记忆", "写工作日志"],
+            "memory_search": ["搜索记忆 3 次"],
+            "code_commit": ["完成��次代码提交"],
+            "share_knowledge": ["分享知识到团队"],
+            "code_review": ["代码审查"],
+            "write_doc": ["写技术文档"],
+        }
+        
+        matching_titles = action_quest_map.get(action, [])
+        if not matching_titles:
+            return
+        
+        changed = False
+        for quest in quests:
+            if quest["status"] != "pending":
+                continue
+            if quest["title"] in matching_titles:
+                # 特殊处理：搜索 3 次需要累计
+                if quest["title"] == "搜索记忆 3 次":
+                    count = quest.get("progress", 0) + 1
+                    quest["progress"] = count
+                    if count >= 3:
+                        quest["status"] = "completed"
+                        quest["completedAt"] = datetime.now().isoformat()
+                        quest["autoDetected"] = True
+                        changed = True
+                else:
+                    quest["status"] = "completed"
+                    quest["completedAt"] = datetime.now().isoformat()
+                    quest["autoDetected"] = True
+                    changed = True
+        
+        if changed:
+            _save_quests(quests, quest_file)
+    except Exception:
+        pass  # 自动感知失败不影响主流程
+
+
 # ============================================================================
 # 工具 8-9: 团队工具
 # ============================================================================
@@ -880,67 +968,36 @@ WORKSPACE_AGENT_MAP = {}
 
 def _get_current_agent() -> str:
     """
-    获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
+    获取当前 Agent 名称（委托给公共模块 agent_resolver）
     
-    优先级（立文指定）：
-    1. ANIMA_AGENT_NAME 环境变量          ← 手动覆盖
-    2. ANIMA_WORKSPACE 环境变量           ← OpenClaw 注入
-    3. 解析 SOUL.md                       ← OpenClaw 身份 ⭐
-    4. 解析 IDENTITY.md                   ← OpenClaw 身份 ⭐
-    5. 工作目录路径解析                   ← 自动检测
-    6. 自动扫描 /home/画像/               ← 降级
-    7. 默认值 "Agent"                     ← 最终降级
+    优先级：
+    1. ANIMA_AGENT_NAME 环境变量
+    2. ANIMA_WORKSPACE 环境变量
+    3. 解析 SOUL.md
+    4. 解析 IDENTITY.md
+    5. 工作目录路径解析
+    6. 自动扫描 facts_base
+    7. 默认值 "Agent"
     """
-    import os
-    import re
+    try:
+        # 尝试使用 core 公共模块
+        sys.path.insert(0, str(ANIMA_HOME / "core"))
+        from agent_resolver import resolve_agent_name
+        return resolve_agent_name(workspace=WORKSPACE, facts_base=FACTS_BASE)
+    except ImportError:
+        pass
     
-    # 1. 环境变量（手动覆盖，最高优先级）
+    # Fallback：基本的环境变量检测
     agent_name = os.getenv("ANIMA_AGENT_NAME")
     if agent_name:
         return agent_name
     
-    # 2. ANIMA_WORKSPACE（OpenClaw 注入）
     workspace = os.getenv("ANIMA_WORKSPACE") or os.getenv("WORKSPACE")
     if workspace:
-        workspace_path = Path(workspace)
-        workspace_name = workspace_path.name
-        # 处理 workspace-{name} 格式
-        if workspace_name.startswith("workspace-"):
-            workspace_name = workspace_name.replace("workspace-", "")
-        return _map_workspace_to_agent(workspace_name)
+        ws_name = Path(workspace).name
+        if ws_name.startswith("workspace-"):
+            return ws_name[len("workspace-"):]
     
-    # 3. 解析 SOUL.md（OpenClaw 身份 ⭐）
-    if WORKSPACE.exists():
-        soul_file = WORKSPACE / "SOUL.md"
-        if soul_file.exists():
-            agent_name = _parse_soul_file(soul_file)
-            if agent_name:
-                return agent_name
-        
-        # 4. 解析 IDENTITY.md（OpenClaw 身份 ⭐）
-        identity_file = WORKSPACE / "IDENTITY.md"
-        if identity_file.exists():
-            agent_name = _parse_identity_file(identity_file)
-            if agent_name:
-                return agent_name
-    
-    # 5. 工作目录路径解析（自动检测）
-    cwd = Path.cwd()
-    if ".openclaw" in str(cwd):
-        for part in cwd.parts:
-            if part.startswith("workspace-"):
-                workspace_name = part.replace("workspace-", "")
-                return _map_workspace_to_agent(workspace_name)
-    
-    # 6. 降级：自动扫描 /home/画像/
-    if FACTS_BASE.exists():
-        for agent_dir in FACTS_BASE.iterdir():
-            if agent_dir.is_dir():
-                exp_file = agent_dir / "exp_history.jsonl"
-                if exp_file.exists():
-                    return agent_dir.name
-    
-    # 7. 默认值
     return "Agent"
 
 
@@ -1055,7 +1112,7 @@ def _add_exp(agent_name: str, dimension: str, exp: int, action: str, details: Di
 
 
 def _log_exp_error(agent_name: str, error: Exception):
-    """记录 EXP 错误日志"""
+    """记录亲密度 错误日志"""
     try:
         log_file = WORKSPACE / "anima_exp_errors.log"
         timestamp = datetime.now().isoformat()

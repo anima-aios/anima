@@ -82,7 +82,7 @@ class PyramidEngine:
     # 同一主题达到此数量时触发自动提炼
     AUTO_DISTILL_THRESHOLD = 3
     
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像",
+    def __init__(self, agent_name: str, facts_base: str = None,
                  auto_distill: bool = False, llm_config: Dict = None):
         self.agent_name = agent_name
         self.pyramid_dir = Path(facts_base) / agent_name / "pyramid"

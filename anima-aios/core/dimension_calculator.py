@@ -85,7 +85,7 @@ class DimensionCalculator:
         'code_review': {'dimension': 'collaboration', 'exp': 3},
     }
     
-    def __init__(self, agent_name: str, facts_base: str = '/home/画像'):
+    def __init__(self, agent_name: str, facts_base: str = None):
         """
         初始化维度计算器
         
@@ -94,6 +94,9 @@ class DimensionCalculator:
             facts_base: facts 基础路径
         """
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name
         self.facts_dir = self.agent_dir / 'facts'
@@ -274,15 +277,16 @@ class DimensionCalculator:
         """
         计算元认知维度分数
         
-        指标：
-        - 周报/复盘次数（权重 5.0）
-        - 反思类 facts（+2.0）
-        - 目标设定（+3.0）
-        - 进度追踪（+2.0）
+        v6.1 增强：除了 exp_history 记录外，自动从以下来源采集：
+        - memory/ 日志中包含反思/总结/复盘关键词（+2.0/篇）
+        - MEMORY.md 存在且有内容（+3.0）
+        - 认知画像查看记录（+1.0/次）
+        - 每日任务完成（+2.0/个）
+        - 周报文件（+5.0/篇）
         """
         score = 0.0
         
-        # 统计周报
+        # 1. 周报文件
         reports_dir = self.agent_dir / 'reports'
         if reports_dir.exists():
             for report_file in reports_dir.glob('weekly_*.md'):
@@ -291,10 +295,46 @@ class DimensionCalculator:
                     continue
                 if file_date and file_date > end_date:
                     continue
-                
                 score += 5.0
         
-        # 从 exp_history 统计其他元认知行为
+        # 2. 自动采集：memory/ 中的反思类内容
+        openclaw_base = Path(os.path.expanduser("~/.openclaw"))
+        for ws in openclaw_base.glob("workspace*"):
+            memory_dir = ws / "memory"
+            if not memory_dir.exists():
+                continue
+            # 检查 workspace 是否属于当前 agent
+            ws_name = ws.name.replace("workspace-", "").replace("workspace", "main")
+            if ws_name != self.agent_name and self.agent_name not in str(ws):
+                continue
+            
+            for md_file in memory_dir.glob("*.md"):
+                file_date = self._extract_date_from_filename(md_file.name)
+                if file_date and start_date and file_date < start_date:
+                    continue
+                if file_date and file_date > end_date:
+                    continue
+                try:
+                    content = md_file.read_text(encoding='utf-8', errors='ignore')
+                    # 包含反思关键词的加分
+                    reflection_keywords = ['反思', '总结', '复盘', '教训', '改进', '反省', 'review', 'reflection', 'lesson']
+                    if any(kw in content.lower() for kw in reflection_keywords):
+                        score += 2.0
+                except Exception:
+                    pass
+            
+            # MEMORY.md 存在且有实质内容
+            memory_md = ws / "MEMORY.md"
+            if memory_md.exists():
+                try:
+                    content = memory_md.read_text(encoding='utf-8', errors='ignore')
+                    if len(content) > 100:  # 不是空模板
+                        score += 3.0
+                except Exception:
+                    pass
+            break  # 只处理匹配的第一个 workspace
+        
+        # 3. 从 exp_history 统计显式的元认知行为
         exp_history_file = self.agent_dir / 'exp_history.jsonl'
         if exp_history_file.exists():
             with open(exp_history_file, 'r', encoding='utf-8') as f:
@@ -302,12 +342,10 @@ class DimensionCalculator:
                     try:
                         record = json.loads(line.strip())
                         record_date = record.get('date', '')
-                        
                         if start_date and record_date < start_date:
                             continue
                         if record_date > end_date:
                             continue
-                        
                         if record.get('dimension') == 'metacognition':
                             action = record.get('action', '')
                             if action == 'weekly_review':
@@ -318,6 +356,10 @@ class DimensionCalculator:
                                 score += 3.0
                             elif action == 'progress_tracking':
                                 score += 2.0
+                            elif action == 'quest_complete':
+                                score += 2.0
+                            elif action == 'view_profile':
+                                score += 1.0
                     except Exception:
                         continue
         
@@ -327,15 +369,59 @@ class DimensionCalculator:
         """
         计算协作认知维度分数
         
-        指标：
-        - 协助他人次数（权重 3.0）
-        - 主动求助（+1.0）
+        v6.1 增强：除了 exp_history 记录外，自动从以下来源采集：
+        - shared/ 目录贡献（知识共享，+5.0/篇）
+        - Vega 消息记录（与其他 Agent 沟通，+1.0/条）
         - 协作任务（+4.0）
-        - 审稿/Code Review（+3.0）
+        - Code Review（+3.0）
         """
         score = 0.0
         
-        # 从 exp_history 统计协作行为
+        # 1. 分享到 shared/ 的知识（也计入 collaboration）
+        if self.shared_dir.exists():
+            for shared_file in self.shared_dir.glob('*.md'):
+                try:
+                    content = shared_file.read_text(encoding='utf-8', errors='ignore')
+                    if self.agent_name in content:
+                        file_date = self._extract_date_from_filename(shared_file.name)
+                        if file_date and start_date and file_date < start_date:
+                            continue
+                        if file_date and file_date > end_date:
+                            continue
+                        score += 5.0
+                except Exception:
+                    pass
+        
+        # 2. 自动采集：Vega 消息（与其他 Agent 的沟通）
+        try:
+            from ..config.path_config import get_config
+            cfg = get_config()
+            outbox = cfg.facts_base.parent / '消息队列' / 'outbox' / self.agent_name
+            if outbox.exists():
+                for msg_file in outbox.glob('*.json'):
+                    file_date = self._extract_date_from_filename(msg_file.name)
+                    if file_date and start_date and file_date < start_date:
+                        continue
+                    if file_date and file_date > end_date:
+                        continue
+                    score += 1.0
+            
+            # 收到的消息也算（别人主动找你协作）
+            inbox = cfg.facts_base.parent / '消息队列' / 'inbox' / self.agent_name
+            if inbox.exists():
+                for msg_file in inbox.glob('*.json'):
+                    if msg_file.name.startswith('集团通知'):
+                        continue  # 跳过广播通知
+                    file_date = self._extract_date_from_filename(msg_file.name)
+                    if file_date and start_date and file_date < start_date:
+                        continue
+                    if file_date and file_date > end_date:
+                        continue
+                    score += 0.5
+        except Exception:
+            pass
+        
+        # 3. 从 exp_history 统计显式的协作行为
         exp_history_file = self.agent_dir / 'exp_history.jsonl'
         if exp_history_file.exists():
             with open(exp_history_file, 'r', encoding='utf-8') as f:
@@ -343,12 +429,10 @@ class DimensionCalculator:
                     try:
                         record = json.loads(line.strip())
                         record_date = record.get('date', '')
-                        
                         if start_date and record_date < start_date:
                             continue
                         if record_date > end_date:
                             continue
-                        
                         if record.get('dimension') == 'collaboration':
                             action = record.get('action', '')
                             if action == 'help_others':

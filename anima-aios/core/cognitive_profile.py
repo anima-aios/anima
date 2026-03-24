@@ -32,15 +32,15 @@ from typing import Dict, List, Optional
 from pathlib import Path
 from datetime import datetime
 
-from dimension_calculator import DimensionCalculator
-from normalization_engine import NormalizationEngine
-from level_system import LevelSystem
+from .dimension_calculator import DimensionCalculator
+from .normalization_engine import NormalizationEngine
+from .level_system import LevelSystem
 
 
 class CognitiveProfileGenerator:
     """认知画像生成器"""
     
-    def __init__(self, agent_name: str, facts_base: str = '/home/画像', config_path: Optional[str] = None):
+    def __init__(self, agent_name: str, facts_base: str = None, config_path: Optional[str] = None):
         """
         初始化认知画像生成器
         
@@ -50,6 +50,9 @@ class CognitiveProfileGenerator:
             config_path: 配置文件路径（可选）
         """
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name
         self.config_path = config_path

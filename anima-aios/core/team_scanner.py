@@ -44,7 +44,7 @@ class TeamScanner:
     # 排除的目录名
     EXCLUDED_DIRS = {'shared', 'templates', 'backup', 'archive'}
     
-    def __init__(self, facts_base: str = '/home/画像', active_days: int = DEFAULT_ACTIVE_DAYS):
+    def __init__(self, facts_base: str = None, active_days: int = DEFAULT_ACTIVE_DAYS):
         """
         初始化团队扫描器
         
@@ -52,6 +52,9 @@ class TeamScanner:
             facts_base: facts 基础路径
             active_days: 活跃度判断窗口（天）
         """
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.active_days = active_days
     

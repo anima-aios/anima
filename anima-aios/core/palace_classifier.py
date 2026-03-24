@@ -46,8 +46,8 @@ from typing import Dict, List, Optional
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from palace_index import PalaceIndex
-from fact_store import FactStore, Fact
+from .palace_index import PalaceIndex
+from .fact_store import FactStore, Fact
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +60,12 @@ class PalaceClassifier:
     将其���入知识宫殿的对应房间。
     """
     
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像",
+    def __init__(self, agent_name: str, facts_base: str = None,
                  config: Dict = None, llm_config: Dict = None):
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.config = config or {}
         
