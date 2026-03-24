@@ -44,6 +44,7 @@ import sys
 import json
 import uuid
 import re
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -330,7 +331,7 @@ def _check_duplicate(content: str, agent_name: str, threshold: int = 50) -> bool
         return False
     
     # 计算内容哈希
-    import hashlib; content_hash = hashlib.md5(content.encode()).hexdigest()
+    content_hash = hashlib.md5(content.encode()).hexdigest()
     
     # 检查今日记忆文件（第 1 层）
     today = datetime.now().strftime("%Y-%m-%d")
