@@ -39,7 +39,7 @@ class LLMClient:
         self._agent_name = self._detect_agent_name()
     
     @staticmethod
-    def _detect_agent_name() -> Optional[str]:
+    def _detect_agent_name() -> str:
         """从环境变量或 workspace 路径自动检测当前 Agent 名称"""
         # 优先从环境变量获取
         for env_key in ("OPENCLAW_AGENT", "OPENCLAW_AGENT_ID"):
@@ -50,8 +50,11 @@ class LLMClient:
         cwd = os.environ.get("PWD", os.getcwd())
         for part in Path(cwd).parts:
             if part.startswith("workspace-"):
-                return part.replace("workspace-", "", 1)
-        return None
+                suffix = part.replace("workspace-", "", 1)
+                if suffix:
+                    return suffix
+        # 没有后缀 → 主 agent (main)
+        return "main"
     
     @staticmethod
     def _strip_ansi_and_logs(text: str) -> str:
