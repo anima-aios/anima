@@ -42,10 +42,22 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    LLM 调用客户端
+    LLM 调用客户端（v6.1 重写）
     
-    通过 openclaw agent 命令调用 LLM。
-    自动检测当前 Agent 名称，支持多模型配置。
+    调用优先级：
+    1. OpenAI 兼容 API 直连（配置 base_url + api_key）
+    2. openclaw agent 命令调用（降级方案）
+    3. 返回空字符串（规则模式降级）
+    
+    配置示例（~/.anima/config/anima_config.json）：
+    {
+        "llm": {
+            "provider": "dashscope",
+            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "api_key": "sk-xxx",
+            "default_model": "qwen-plus"
+        }
+    }
     """
     
     def __init__(self, config: Dict = None):
@@ -53,13 +65,32 @@ class LLMClient:
         self.provider = self.config.get("provider", "current_agent")
         self.models = self.config.get("models", {})
         self._agent_name = self._detect_agent_name()
+        
+        # 尝试从全局配置文件加载 LLM 配置
+        if not self.config.get("base_url"):
+            self._load_config_file()
     
-    @staticmethod
+    def _load_config_file(self):
+        """从 ~/.anima/config/anima_config.json 加载 LLM 配置"""
+        config_file = Path(os.path.expanduser("~/.anima/config/anima_config.json"))
+        if config_file.exists():
+            try:
+                import json as _json
+                with open(config_file) as f:
+                    cfg = _json.load(f)
+                llm_cfg = cfg.get("llm", {})
+                if llm_cfg.get("base_url"):
+                    self.config.update(llm_cfg)
+                    self.provider = llm_cfg.get("provider", self.provider)
+            except Exception:
+                pass
+    
     @staticmethod
     def _detect_agent_name() -> str:
         """从环境变量或 workspace 路径自动检测当前 Agent 名称（委托给公共模块）"""
         from .agent_resolver import resolve_agent_name
         return resolve_agent_name()
+    
     @staticmethod
     def _strip_ansi_and_logs(text: str) -> str:
         """过滤 ANSI 转义码和 [plugins] 日志行，只保留 LLM 实际响应"""
@@ -67,27 +98,48 @@ class LLMClient:
         lines = text.strip().split('\n')
         clean_lines = []
         for line in lines:
-            # 去掉 ANSI 转义码
             clean = re.sub(r'\x1b\[[0-9;]*m', '', line)
-            # 跳过 [plugins] 等框架日志
             if clean.startswith('[plugins]') or clean.startswith('[gateway]'):
                 continue
             clean_lines.append(clean)
         return '\n'.join(clean_lines).strip()
     
-    def call(self, prompt: str, task: str = "default", max_tokens: int = 500) -> str:
-        """
-        调用 LLM
+    def _call_api(self, prompt: str, task: str = "default", max_tokens: int = 500) -> str:
+        """通过 OpenAI 兼容 API 直连调用 LLM"""
+        base_url = self.config.get("base_url")
+        api_key = self.config.get("api_key") or os.getenv("ANIMA_LLM_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
         
-        Args:
-            prompt: 提示词
-            task: 任务类型（quality_assess / dedup_analyze / palace_classify / distill）
-            max_tokens: 最大输出 token 数
+        if not base_url or not api_key:
+            return ""
         
-        Returns:
-            LLM 响应文本
-        """
-        # 通过 openclaw agent 调用 LLM
+        model = self.config.get("models", {}).get(task) or self.config.get("default_model", "qwen-plus")
+        
+        import urllib.request
+        import json as _json
+        
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        payload = _json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens,
+            "temperature": 0.3
+        }).encode("utf-8")
+        
+        req = urllib.request.Request(url, data=payload, headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        })
+        
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = _json.loads(resp.read().decode("utf-8"))
+                return data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        except Exception as e:
+            logger.warning(f"API 直连调用失败: {e}")
+            return ""
+    
+    def _call_openclaw(self, prompt: str) -> str:
+        """通过 openclaw agent 命令调用 LLM（降级方案）"""
         try:
             cmd = ["openclaw", "agent", "--message", prompt]
             if self._agent_name:
@@ -102,14 +154,39 @@ class LLMClient:
                 if response:
                     return response
         except subprocess.TimeoutExpired:
-            logger.warning(f"LLM 调用超时 (task={task})")
+            logger.warning("openclaw agent 调用超时")
         except FileNotFoundError:
-            logger.warning("openclaw 命令未找到")
+            logger.debug("openclaw 命令未找到")
         except Exception as e:
-            logger.warning(f"LLM 调用异常: {e}")
+            logger.warning(f"openclaw agent 调用异常: {e}")
+        return ""
+    
+    def call(self, prompt: str, task: str = "default", max_tokens: int = 500) -> str:
+        """
+        调用 LLM（自动选择最佳通道）
         
-        # 降级为规则匹配
-        logger.warning(f"LLM 调用失败，降级为规则模式 (task={task})")
+        优先级：API 直连 → openclaw agent → 空字符串（规则降级）
+        
+        Args:
+            prompt: 提示词
+            task: 任务类型（quality_assess / dedup_analyze / palace_classify / distill）
+            max_tokens: 最大输出 token 数
+        
+        Returns:
+            LLM 响应文本，失败返回空字符串
+        """
+        # 1. 优先：API 直连
+        response = self._call_api(prompt, task, max_tokens)
+        if response:
+            return response
+        
+        # 2. 降级：openclaw agent
+        response = self._call_openclaw(prompt)
+        if response:
+            return response
+        
+        # 3. 最终降级：规则模式
+        logger.warning(f"LLM 全部通道失败，降级为规则模式 (task={task})")
         return ""
 
 
