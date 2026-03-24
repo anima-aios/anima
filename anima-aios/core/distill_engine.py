@@ -28,14 +28,45 @@ class LLMClient:
     """
     LLM 调用客户端
     
-    默认使用当前 Agent 的模型（通过 OpenClaw 的 sessions_spawn 或直接调用）。
-    支持多模型配置，可按任务指定不同模型。
+    通过 openclaw agent 命令调用 LLM。
+    自动检测当前 Agent 名称，支持多模型配置。
     """
     
     def __init__(self, config: Dict = None):
         self.config = config or {}
         self.provider = self.config.get("provider", "current_agent")
         self.models = self.config.get("models", {})
+        self._agent_name = self._detect_agent_name()
+    
+    @staticmethod
+    def _detect_agent_name() -> Optional[str]:
+        """从环境变量或 workspace 路径自动检测当前 Agent 名称"""
+        # 优先从环境变量获取
+        for env_key in ("OPENCLAW_AGENT", "OPENCLAW_AGENT_ID"):
+            name = os.environ.get(env_key)
+            if name:
+                return name
+        # 从 PWD 中提取 workspace-{name}
+        cwd = os.environ.get("PWD", os.getcwd())
+        for part in Path(cwd).parts:
+            if part.startswith("workspace-"):
+                return part.replace("workspace-", "", 1)
+        return None
+    
+    @staticmethod
+    def _strip_ansi_and_logs(text: str) -> str:
+        """过滤 ANSI 转义码和 [plugins] 日志行，只保留 LLM 实际响应"""
+        import re
+        lines = text.strip().split('\n')
+        clean_lines = []
+        for line in lines:
+            # 去掉 ANSI 转义码
+            clean = re.sub(r'\x1b\[[0-9;]*m', '', line)
+            # 跳过 [plugins] 等框架日志
+            if clean.startswith('[plugins]') or clean.startswith('[gateway]'):
+                continue
+            clean_lines.append(clean)
+        return '\n'.join(clean_lines).strip()
     
     def call(self, prompt: str, task: str = "default", max_tokens: int = 500) -> str:
         """
@@ -49,21 +80,28 @@ class LLMClient:
         Returns:
             LLM 响应文本
         """
-        model = self.models.get(task, self.provider)
-        
-        # 方案1：通过 OpenClaw 的命令行工具调用（最通用）
+        # 通过 openclaw agent 调用 LLM
         try:
+            cmd = ["openclaw", "agent", "--message", prompt]
+            if self._agent_name:
+                cmd.extend(["--agent", self._agent_name])
+            
             result = subprocess.run(
-                ["openclaw", "ask", "--raw", prompt],
-                capture_output=True, text=True, timeout=30,
-                env={**os.environ, "OPENCLAW_MAX_TOKENS": str(max_tokens)}
+                cmd,
+                capture_output=True, text=True, timeout=60
             )
-            if result.returncode == 0 and result.stdout.strip():
-                return result.stdout.strip()
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+            if result.returncode == 0:
+                response = self._strip_ansi_and_logs(result.stdout)
+                if response:
+                    return response
+        except subprocess.TimeoutExpired:
+            logger.warning(f"LLM 调用超时 (task={task})")
+        except FileNotFoundError:
+            logger.warning("openclaw 命令未找到")
+        except Exception as e:
+            logger.warning(f"LLM 调用异常: {e}")
         
-        # 方案2：降级为规则匹配
+        # 降级为规则匹配
         logger.warning(f"LLM 调用失败，降级为规则模式 (task={task})")
         return ""
 
