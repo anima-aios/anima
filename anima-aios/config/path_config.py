@@ -62,11 +62,35 @@ class Config:
     
     @property
     def facts_base(self) -> Path:
-        """获取 facts 基础路径"""
+        """获取 facts 基础路径
+        
+        优先级：
+        1. 构造函数传入的 facts_base
+        2. 环境变量 ANIMA_FACTS_BASE
+        3. ~/.anima/config/anima_config.json 中的 facts_base
+        4. 系统自动检测（Linux: /home/画像, macOS: ~/画像, Windows: ~/画像）
+        """
         if self._facts_base:
             return Path(self._facts_base)
         
-        # 自动检测
+        # 环境变量优先
+        env_base = os.getenv("ANIMA_FACTS_BASE")
+        if env_base:
+            return Path(env_base)
+        
+        # 读取配置文件
+        config_file = Path(os.path.expanduser("~/.anima/config/anima_config.json"))
+        if config_file.exists():
+            try:
+                import json
+                with open(config_file) as f:
+                    cfg = json.load(f)
+                if cfg.get("facts_base"):
+                    return Path(cfg["facts_base"])
+            except Exception:
+                pass
+        
+        # 系统自动检测
         if self.is_linux:
             return Path('/home/画像')
         elif self.is_macos:
@@ -76,7 +100,6 @@ class Config:
             username = os.getenv('USERNAME', 'user')
             return Path(f'C:/Users/{username}/画像')
         else:
-            # 默认 Linux
             return Path(self.DEFAULT_FACTS_BASE)
     
     @property

@@ -41,9 +41,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 # 导入路径配置
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / 'config'))
-from path_config import get_config
+from ..config.path_config import get_config
 
 
 class SessionScanner:
@@ -59,26 +57,37 @@ class SessionScanner:
         'message_assistant': 0.5,  # 每条 assistant 消息
     }
     
-    # Agent 名称映射（OpenClaw 目录名 → 中文名称）
-    AGENT_NAME_MAP = {
-        'main': '日安',  # 主 Agent
-        'shuheng': '枢衡',
-        'mingche': '明澈',
-        'liuying': '流萤',
-        'xinglan': '星澜',
-        'tangdou': '糖豆',
-        'baimo': '白墨',
-        'qingshan': '青衫',
-        'jinyu': '瑾瑜',
-        'zhengyan': '正言',
-        'jianyan': '检严',
-        'leyan': '乐言',
-        'gouwen': '构稳',
-        'youce': '游策',
-        'jiean': '界安',
-        'weian': '维安',
-        'rian': '日安',
-    }
+    # Agent 名称映射：动态从 SOUL.md/IDENTITY.md 解析，不再硬编码
+    AGENT_NAME_MAP = {}  # 运行时动态填充
+
+    @classmethod
+    def _resolve_agent_cn_name(cls, agent_dir_name: str, openclaw_base: Path) -> str:
+        """从 workspace 的 SOUL.md/IDENTITY.md 动态解析 Agent 中文名"""
+        if agent_dir_name in cls.AGENT_NAME_MAP:
+            return cls.AGENT_NAME_MAP[agent_dir_name]
+        
+        from .agent_resolver import parse_soul_file, parse_identity_file
+        
+        ws_name = f"workspace-{agent_dir_name}" if agent_dir_name != "main" else "workspace"
+        ws_path = openclaw_base / ws_name
+        
+        # 尝试解析
+        soul = ws_path / "SOUL.md"
+        if soul.exists():
+            name = parse_soul_file(soul)
+            if name:
+                cls.AGENT_NAME_MAP[agent_dir_name] = name
+                return name
+        
+        identity = ws_path / "IDENTITY.md"
+        if identity.exists():
+            name = parse_identity_file(identity)
+            if name:
+                cls.AGENT_NAME_MAP[agent_dir_name] = name
+                return name
+        
+        cls.AGENT_NAME_MAP[agent_dir_name] = agent_dir_name
+        return agent_dir_name
     
     def __init__(self, openclaw_base: Optional[str] = None,
                  facts_base: Optional[str] = None):
@@ -132,7 +141,7 @@ class SessionScanner:
             
             if exp_data['sessions'] > 0:
                 # 转换为中文名
-                cn_name = self.AGENT_NAME_MAP.get(agent_name, agent_name)
+                cn_name = self._resolve_agent_cn_name(agent_name, self.openclaw_base)
                 results[cn_name] = exp_data
                 print(f"✅ {cn_name}: {exp_data['sessions']} sessions, {exp_data['tool_calls']} tool calls, {exp_data['exp']} EXP, Lv.{exp_data['level']}")
         

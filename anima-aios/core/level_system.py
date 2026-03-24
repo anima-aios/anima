@@ -87,7 +87,7 @@ class LevelSystem:
     LEVEL_FORMULA_POWER = 0.28
     MAX_LEVEL = 100
     
-    def __init__(self, agent_name: str, facts_base: str = '/home/画像'):
+    def __init__(self, agent_name: str, facts_base: str = None):
         """
         初始化等级系统
         

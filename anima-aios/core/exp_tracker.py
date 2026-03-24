@@ -59,7 +59,7 @@ class EXPTracker:
         }
     }
     
-    def __init__(self, agent_name: str, facts_base: str = '/home/画像'):
+    def __init__(self, agent_name: str, facts_base: str = None):
         """
         初始化 EXP 追踪器
         
@@ -68,6 +68,9 @@ class EXPTracker:
             facts_base: facts 基础路径
         """
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = Path(facts_base)
         self.agent_dir = self.facts_base / agent_name
         

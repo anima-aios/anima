@@ -51,7 +51,10 @@ class MemorySync:
                 self.workspace_mem = openclaw_dir / "workspace" / "memory"
         else:
             self.workspace_mem = Path(os.path.expanduser(f"~/.openclaw/workspace-{workspace_name}/memory"))
-        self.portrait_mem = Path(f"/home/画像/{agent_name}/memory")
+        # 获取 facts_base（支持环境变量和配置文件）
+        from ..config.path_config import get_config
+        _cfg = get_config()
+        self.portrait_mem = _cfg.facts_base / agent_name / "memory"
         
         # 确保画像目录存在
         self.portrait_mem.mkdir(parents=True, exist_ok=True)

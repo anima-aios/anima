@@ -58,7 +58,26 @@ if ANIMA_HOME.exists():
 WORKSPACE = Path(os.getenv("ANIMA_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
 
 # 事实数据路径（facts_base）
-FACTS_BASE = Path(os.getenv("ANIMA_FACTS_BASE", "/home/画像"))
+# 动态获取 facts_base（优先环境变量 > 配置���件 > 系统检测）
+def _get_facts_base() -> Path:
+    env = os.getenv("ANIMA_FACTS_BASE")
+    if env:
+        return Path(env)
+    config_file = Path(os.path.expanduser("~/.anima/config/anima_config.json"))
+    if config_file.exists():
+        try:
+            with open(config_file) as f:
+                cfg = json.load(f)
+            if cfg.get("facts_base"):
+                return Path(cfg["facts_base"])
+        except Exception:
+            pass
+    import platform
+    if platform.system() == "Darwin":
+        return Path(os.path.expanduser("~/画像"))
+    return Path("/home/画像")
+
+FACTS_BASE = _get_facts_base()
 
 
 # ============================================================================
@@ -880,67 +899,36 @@ WORKSPACE_AGENT_MAP = {}
 
 def _get_current_agent() -> str:
     """
-    获取当前 Agent 名称（v5.0.4 集成 OpenClaw 身份体系）
+    获取当前 Agent 名称（委托给公共模块 agent_resolver）
     
-    优先级（立文指定）：
-    1. ANIMA_AGENT_NAME 环境变量          ← 手动覆盖
-    2. ANIMA_WORKSPACE 环境变量           ← OpenClaw 注入
-    3. 解析 SOUL.md                       ← OpenClaw 身份 ⭐
-    4. 解析 IDENTITY.md                   ← OpenClaw 身份 ⭐
-    5. 工作目录路径解析                   ← 自动检测
-    6. 自动扫描 /home/画像/               ← 降级
-    7. 默认值 "Agent"                     ← 最终降级
+    优先级：
+    1. ANIMA_AGENT_NAME 环境变量
+    2. ANIMA_WORKSPACE 环境变量
+    3. 解析 SOUL.md
+    4. 解析 IDENTITY.md
+    5. 工作目录路径解析
+    6. 自动扫描 facts_base
+    7. 默认值 "Agent"
     """
-    import os
-    import re
+    try:
+        # 尝试使用 core 公共模块
+        sys.path.insert(0, str(ANIMA_HOME / "core"))
+        from agent_resolver import resolve_agent_name
+        return resolve_agent_name(workspace=WORKSPACE, facts_base=FACTS_BASE)
+    except ImportError:
+        pass
     
-    # 1. 环境变量（手动覆盖，最高优先级）
+    # Fallback：基本的环境变量检测
     agent_name = os.getenv("ANIMA_AGENT_NAME")
     if agent_name:
         return agent_name
     
-    # 2. ANIMA_WORKSPACE（OpenClaw 注入）
     workspace = os.getenv("ANIMA_WORKSPACE") or os.getenv("WORKSPACE")
     if workspace:
-        workspace_path = Path(workspace)
-        workspace_name = workspace_path.name
-        # 处理 workspace-{name} 格式
-        if workspace_name.startswith("workspace-"):
-            workspace_name = workspace_name.replace("workspace-", "")
-        return _map_workspace_to_agent(workspace_name)
+        ws_name = Path(workspace).name
+        if ws_name.startswith("workspace-"):
+            return ws_name[len("workspace-"):]
     
-    # 3. 解析 SOUL.md（OpenClaw 身份 ⭐）
-    if WORKSPACE.exists():
-        soul_file = WORKSPACE / "SOUL.md"
-        if soul_file.exists():
-            agent_name = _parse_soul_file(soul_file)
-            if agent_name:
-                return agent_name
-        
-        # 4. 解析 IDENTITY.md（OpenClaw 身份 ⭐）
-        identity_file = WORKSPACE / "IDENTITY.md"
-        if identity_file.exists():
-            agent_name = _parse_identity_file(identity_file)
-            if agent_name:
-                return agent_name
-    
-    # 5. 工作目录路径解析（自动检测）
-    cwd = Path.cwd()
-    if ".openclaw" in str(cwd):
-        for part in cwd.parts:
-            if part.startswith("workspace-"):
-                workspace_name = part.replace("workspace-", "")
-                return _map_workspace_to_agent(workspace_name)
-    
-    # 6. 降级：自动扫描 /home/画像/
-    if FACTS_BASE.exists():
-        for agent_dir in FACTS_BASE.iterdir():
-            if agent_dir.is_dir():
-                exp_file = agent_dir / "exp_history.jsonl"
-                if exp_file.exists():
-                    return agent_dir.name
-    
-    # 7. 默认值
     return "Agent"
 
 

@@ -35,7 +35,7 @@ from typing import Dict, List, Optional, Tuple
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fact_store import FactStore, Fact, QualityGrade
+from .fact_store import FactStore, Fact, QualityGrade
 
 logger = logging.getLogger(__name__)
 
@@ -55,23 +55,11 @@ class LLMClient:
         self._agent_name = self._detect_agent_name()
     
     @staticmethod
+    @staticmethod
     def _detect_agent_name() -> str:
-        """从环境变量或 workspace 路径自动检测当前 Agent 名称"""
-        # 优先从环境变量获取
-        for env_key in ("OPENCLAW_AGENT", "OPENCLAW_AGENT_ID"):
-            name = os.environ.get(env_key)
-            if name:
-                return name
-        # 从 PWD 中提取 workspace-{name}
-        cwd = os.environ.get("PWD", os.getcwd())
-        for part in Path(cwd).parts:
-            if part.startswith("workspace-"):
-                suffix = part.replace("workspace-", "", 1)
-                if suffix:
-                    return suffix
-        # 没有后缀 → 主 agent (main)
-        return "main"
-    
+        """从环境变量或 workspace 路径自动检测当前 Agent 名称（委托给公共模块）"""
+        from .agent_resolver import resolve_agent_name
+        return resolve_agent_name()
     @staticmethod
     def _strip_ansi_and_logs(text: str) -> str:
         """过滤 ANSI 转义码和 [plugins] 日志行，只保留 LLM 实际响应"""
@@ -138,9 +126,12 @@ class DistillEngine:
     6. 写入 L3 语义记忆
     """
     
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像",
+    def __init__(self, agent_name: str, facts_base: str = None,
                  llm_config: Dict = None):
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.store = FactStore(agent_name, facts_base)
         self.llm = LLMClient(llm_config)

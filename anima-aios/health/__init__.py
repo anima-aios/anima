@@ -39,10 +39,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional
 
-# 确保 core/ 在 sys.path 中，以支持裸相对导入
-_core_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "core")
-if _core_dir not in sys.path:
-    sys.path.insert(0, _core_dir)
+# core 模块通过相对导入引用（在各方法内按需导入）
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +47,7 @@ logger = logging.getLogger(__name__)
 class HealthHygiene:
     """数据卫生检查：完整性 + 去重 + 清理"""
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         self.base = Path(facts_base) / agent_name
 
@@ -141,7 +138,7 @@ class HealthHygiene:
 class HealthCorrection:
     """自动纠错：检测并修复常见数据问题"""
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         self.base = Path(facts_base) / agent_name
 
@@ -198,8 +195,11 @@ class HealthCorrection:
 class HealthEvolution:
     """每日进化：自动提炼高价值记忆"""
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.log_file = Path(facts_base) / agent_name / "health" / "evolution-log.jsonl"
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -218,7 +218,7 @@ class HealthEvolution:
 
         # Step 1: L2→L3 提炼
         try:
-            from distill_engine import DistillEngine
+            from ..core.distill_engine import DistillEngine
             engine = DistillEngine(self.agent_name, self.facts_base)
             distill_result = engine.run(batch_size=50)
             stats["steps"]["distill"] = distill_result
@@ -227,7 +227,7 @@ class HealthEvolution:
 
         # Step 2: 宫殿分类
         try:
-            from palace_classifier import PalaceClassifier
+            from ..core.palace_classifier import PalaceClassifier
             classifier = PalaceClassifier(self.agent_name, self.facts_base)
             unclassified = classifier.get_unclassified()
             if unclassified:
@@ -240,7 +240,7 @@ class HealthEvolution:
 
         # Step 3: 金字塔自动提炼
         try:
-            from pyramid_engine import PyramidEngine
+            from ..core.pyramid_engine import PyramidEngine
             pyramid = PyramidEngine(self.agent_name, self.facts_base, auto_distill=True)
             topics = pyramid.get_topics()
             distilled_topics = 0
@@ -262,14 +262,17 @@ class HealthEvolution:
 class HealthAbstraction:
     """知识抽象：举一反三，从已有知识中发现新关联"""
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像",
+    def __init__(self, agent_name: str, facts_base: str = None,
                  llm_config: Dict = None):
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.llm = None
         if llm_config:
             try:
-                from distill_engine import LLMClient
+                from ..core.distill_engine import LLMClient
                 self.llm = LLMClient(llm_config)
             except ImportError:
                 pass
@@ -279,7 +282,7 @@ class HealthAbstraction:
         发现跨房间的知识关联
         """
         try:
-            from palace_index import PalaceIndex
+            from ..core.palace_index import PalaceIndex
             palace = PalaceIndex(self.agent_name, self.facts_base)
         except ImportError:
             return []
@@ -327,9 +330,12 @@ class HealthManager:
     Doctor 命令的后端。
     """
 
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像",
+    def __init__(self, agent_name: str, facts_base: str = None,
                  llm_config: Dict = None):
         self.agent_name = agent_name
+        if facts_base is None:
+            from ..config.path_config import get_config
+            facts_base = str(get_config().facts_base)
         self.facts_base = facts_base
         self.hygiene = HealthHygiene(agent_name, facts_base)
         self.correction = HealthCorrection(agent_name, facts_base)
@@ -356,8 +362,8 @@ class HealthManager:
 
         # 3. 衰减状态
         try:
-            from decay_function import DecayManager
-            from fact_store import FactStore
+            from ..core.decay_function import DecayManager
+            from ..core.fact_store import FactStore
             store = FactStore(self.agent_name, self.facts_base)
             decay = DecayManager(self.agent_name, self.facts_base)
 
@@ -380,7 +386,7 @@ class HealthManager:
 
         # 4. 宫殿状态
         try:
-            from palace_index import PalaceIndex
+            from ..core.palace_index import PalaceIndex
             palace = PalaceIndex(self.agent_name, self.facts_base)
             report["modules"]["palace"] = palace.get_stats()
         except Exception as e:
@@ -388,7 +394,7 @@ class HealthManager:
 
         # 5. 金字塔状态
         try:
-            from pyramid_engine import PyramidEngine
+            from ..core.pyramid_engine import PyramidEngine
             pyramid = PyramidEngine(self.agent_name, self.facts_base)
             report["modules"]["pyramid"] = pyramid.get_stats()
         except Exception as e:

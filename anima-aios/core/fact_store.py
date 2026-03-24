@@ -151,7 +151,7 @@ class FactStore:
     管理 L2（episodic）和 L3（semantic）的读写操作。
     """
     
-    def __init__(self, agent_name: str, facts_base: str = "/home/画像"):
+    def __init__(self, agent_name: str, facts_base: str = None):
         self.agent_name = agent_name
         self.base_dir = Path(facts_base) / agent_name / "facts"
         self.episodic_dir = self.base_dir / "episodic"
