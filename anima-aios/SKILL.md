@@ -1,9 +1,9 @@
 ---
 name: anima-aios
-description: "An AI Agent cognitive growth system built on the native OpenClaw architecture. It provides agents with persistent memory management, visual EXP progression, a 5-dimensional cognitive profile, gamified daily quests, team leaderboards, and a 5-layer memory architecture with Knowledge Palace, Pyramid thinking, and Ebbinghaus decay function. 基于 OpenClaw 原生架构的 AI Agent 认知成长体系，为 Agent 提供五层记忆架构、知识宫殿、金字塔知识组织、记忆衰减函数、LLM 智能处理、永久化记忆管理、可视化经验值成长、五维认知画像、游戏化每日任务和团队排行榜。"
+description: "An AI Agent cognitive growth system built on the native OpenClaw architecture. It provides agents with persistent memory management, visual intimacy progression, a 5-dimensional cognitive profile, gamified daily quests, team leaderboards, and a 5-layer memory architecture with Knowledge Palace, Pyramid thinking, and Ebbinghaus decay function. 基于 OpenClaw 原生架构的 AI Agent 认知成长体系，为 Agent 提供五层记忆架构、知识宫殿、金字塔知识组织、记忆衰减函数、LLM 智能处理、永久化记忆管理、可视化亲密度成长、五维认知画像、游戏化每日任务和团队排行榜。"
 use_when:
   - cognitive profile
-  - EXP
+  - intimacy
   - level
   - daily quest
   - memory sync
@@ -17,7 +17,7 @@ use_when:
   - health check
   - evolution
   - 认知画像
-  - 经验值
+  - 亲密度
   - 等级
   - 每日任务
   - 记忆同步
@@ -83,7 +83,7 @@ use_when:
 
 ### 🧠 增强记忆管理
 - **多层同步**：OpenClaw Memory + Anima Facts + EXP History
-- **EXP 奖励**：写记忆自动获得经验值
+- **亲密度奖励**：写记忆自动获得亲密度
 - **智能去重**：自动避免重复记录
 
 ### 📊 五维认知画像
@@ -95,11 +95,11 @@ use_when:
 
 ### 🎮 游戏化成长
 - **等级系统**：从 Lv.1 新手到 Lv.100 终身成就
-- **每日任务**：每天 3 个挑战，完成获得额外 EXP
+- **每日任务**：每天 3 个挑战，完成获得额外亲密度
 - **进度追踪**：可视化升级进度条
 
 ### 🏆 团队排行榜
-- **EXP 排行**：基于公平归一化算法排名
+- **亲密度排行**：基于公平归一化算法排名
 - **实时竞争**：追踪排名变化和差距
 
 ---
@@ -123,7 +123,7 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
     金字塔   ── pyramid/（实例→规则→模式→本体）
        │ 反思
        ▼
- L5 元认知层 ── 五维画像 + EXP + 衰减 + 健康
+ L5 元认知层 ── 五维画像 + 亲密度 + 衰减 + 健康
 ```
 
 ---
@@ -141,7 +141,7 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
 | palace_classifier.py | v6.0 | 宫殿分类调度器（延迟防抖） |
 | decay_function.py | v6.0 | Ebbinghaus 记忆衰减计算 |
 | cognitive_profile.py | v5→v6 | 五维认知画像生成器 |
-| exp_tracker.py | v5 | EXP 经验值追踪 |
+| exp_tracker.py | v5 | 亲密度追踪 |
 | level_system.py | v5 | 等级系统 |
 | daily_quest.py | v5 | 每日任务 |
 | memory_sync.py | v5→v6 | 记忆同步（已修复路径硬编码） |
