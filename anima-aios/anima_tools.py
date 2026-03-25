@@ -675,7 +675,7 @@ def quest_daily_status(agent_name: str = "current") -> Dict:
         agent_name = _get_current_agent()
     
     today = datetime.now().strftime("%Y-%m-%d")
-    quest_file = ANIMA_HOME / agent_name / "quests" / f"{today}.json"
+    quest_file = FACTS_BASE / agent_name / "daily_quests" / f"{today}.json"
     
     if not quest_file.exists():
         # 生成今日任务
@@ -712,7 +712,7 @@ def quest_complete(quest_id: str, proof: Optional[str] = None, agent_name: str =
         agent_name = _get_current_agent()
     
     today = datetime.now().strftime("%Y-%m-%d")
-    quest_file = ANIMA_HOME / agent_name / "quests" / f"{today}.json"
+    quest_file = FACTS_BASE / agent_name / "daily_quests" / f"{today}.json"
     
     if not quest_file.exists():
         return {
@@ -821,7 +821,7 @@ def _auto_check_quest(agent_name: str, action: str):
     """
     try:
         today = datetime.now().strftime("%Y-%m-%d")
-        quest_file = ANIMA_HOME / agent_name / "quests" / f"{today}.json"
+        quest_file = FACTS_BASE / agent_name / "daily_quests" / f"{today}.json"
         
         if not quest_file.exists():
             return

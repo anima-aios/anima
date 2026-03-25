@@ -67,11 +67,14 @@ class PalaceIndex:
         self.index = self._load_index()
     
     def _load_index(self) -> Dict:
-        """加载宫殿索引"""
+        """加载宫殿索引（Z BUG-015 修复：加载后重算 stats）"""
         if self.index_file.exists():
             try:
                 with open(self.index_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    index = json.load(f)
+                # 从实际 room 文件重算 stats，避免统计偏差
+                self._recalculate_stats(index)
+                return index
             except Exception:
                 pass
         
@@ -119,6 +122,18 @@ class PalaceIndex:
         self._save_index(index)
         return index
     
+    def _recalculate_stats(self, index: Dict):
+        """从实际 room 文件重算统计数据（Z BUG-015 修复）"""
+        total_items = 0
+        rooms = index.get("palace", {}).get("floors", {}).get("main", {}).get("rooms", {})
+        for room_id, room_info in rooms.items():
+            room_data = self._load_room(room_id)
+            actual_count = len(room_data.get("items", []))
+            room_info["item_count"] = actual_count
+            total_items += actual_count
+        index["stats"]["total_items"] = total_items
+        index["stats"]["total_rooms"] = len(rooms)
+
     def _save_index(self, index: Dict = None):
         """保存索引"""
         if index is None:

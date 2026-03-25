@@ -260,9 +260,20 @@ class DailyQuestSystem:
         return count
     
     def _count_searches_today(self, date: str) -> int:
-        """统计今天的记忆搜索次数"""
+        """统计今天的记忆搜索次数（BUG-017 修复：多源统计）"""
         exp_history = self.exp_tracker.get_exp_history(date, date, 'application')
-        return sum(1 for r in exp_history if r.get('action') == 'memory_search')
+        # 匹配所有可能的搜索相关 action
+        search_actions = (
+            'memory_search', 'import_from_sessions',
+            'knowledge_reuse', 'search_then_complete_task',
+        )
+        count = sum(1 for r in exp_history if r.get('action') in search_actions)
+
+        # fallback: 如果没有精确匹配，至少算有 application 维度的 EXP 存在
+        if count == 0 and len(exp_history) > 0:
+            count = 1  # 有 application 记录就至少算 1 次
+
+        return count
     
     def _count_completed_tasks_today(self, date: str) -> int:
         """统计今天完成的任务数"""
@@ -280,7 +291,7 @@ class DailyQuestSystem:
             for shared_file in shared_dir.glob(f'*{date}*.md'):
                 try:
                     content = shared_file.read_text(encoding='utf-8')
-                    if f'作者：{self.agent_name}' in content:
+                    if self.agent_name in content:
                         count += 1
                 except Exception:
                     continue

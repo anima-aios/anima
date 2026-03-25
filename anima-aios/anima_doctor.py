@@ -155,7 +155,8 @@ def _get_current_agent() -> str:
         return resolve_agent_name()
     except ImportError:
         pass
-        import os
+
+    import os
     import re
     
     # 1. 环境变量（手动覆盖，最高优先级）
