@@ -105,23 +105,6 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
 
 ## 🚀 快速开始
 
-### 安装
-
-```bash
-# 通过 ClawHub 安装
-clawhub install anima-aios
-
-# 或手动安装
-git clone https://github.com/anima-aios/anima.git
-cp -r anima/anima-aios ~/.openclaw/skills/anima-aios
-```
-
-### 安装依赖
-
-```bash
-pip install watchdog
-```
-
 ### 配置（可选）
 
 配置文件路径：`~/.anima/config/anima_config.json`
@@ -204,6 +187,21 @@ cd anima-aios && python3 tests/test_integration_v6.py
 
 查看完整更新日志：[CHANGELOG.md](CHANGELOG.md)
 
+### v6.2.0（2026-03-25）🆕
+- ✅ 原生记忆导入（一键迁移 OpenClaw 记忆 + session 历史）
+- ✅ 平滑升级保证（v6.1 数据零损失）
+- ✅ content_hash 去重（SHA256） + bookmark 增量导入
+- ✅ 导入前自动备份，支持回滚
+- ✅ 导入后画像自动重算
+- ✅ 全员 17 个 Agent 导入测试通过
+
+### v6.1.x（2026-03-25）
+- ✅ LLM 调用通道打通（API 直连 + openclaw agent 降级）
+- ✅ 打通 creation/metacognition/collaboration 三维数据采集
+- ✅ EXP → 亲密度概念重塑
+- ✅ 任务自动感知（不依赖手动打卡）
+- ✅ 统一导入方式、路径、Agent 名称检测（三刀修复）
+
 ### v6.0.0（2026-03-24）🆕
 - ✅ 五层记忆架构（L1~L5）
 - ✅ 知识宫殿 + 金字塔知识组织
@@ -228,4 +226,4 @@ cd anima-aios && python3 tests/test_integration_v6.py
 _架构只能演进，不能退化。_
 _先诚实，再迭代。代码要配得上宣传。_
 
-**版本：** v6.0.0 | **最后更新：** 2026-03-24
+**版本：** v6.2.0 | **最后更新：** 2026-03-25

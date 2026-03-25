@@ -68,6 +68,7 @@ anima-aios/
 │   ├── pyramid_engine.py     # L4 金字塔知识组织
 │   ├── cognitive_profile.py  # L5 认知画像
 │   ├── exp_tracker.py        # EXP 追踪
+│   ├── native_importer.py    # v6.2 原生记忆导入
 │   └── ...
 ├── health/         # 健康系统（5 个模块）
 ├── tests/          # 集成测试
@@ -113,11 +114,8 @@ test: add integration test for L4 pyramid
 ## 🧪 测试
 
 ```bash
-# 运行集成测试
+# 运行集成测试（37 项检查）
 cd anima-aios && python3 tests/test_integration_v6.py
-
-# 运行单元测试
-cd anima-aios/tests && python3 -m pytest
 ```
 
 ## 📄 License
