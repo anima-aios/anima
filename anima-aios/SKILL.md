@@ -1,6 +1,25 @@
 ---
 name: anima-aios
 description: "An AI Agent cognitive growth system built on the native OpenClaw architecture. It provides agents with persistent memory management, visual intimacy progression, a 5-dimensional cognitive profile, gamified daily quests, team leaderboards, and a 5-layer memory architecture with Knowledge Palace, Pyramid thinking, and Ebbinghaus decay function. 基于 OpenClaw 原生架构的 AI Agent 认知成长体系，为 Agent 提供五层记忆架构、知识宫殿、金字塔知识组织、记忆衰减函数、LLM 智能处理、永久化记忆管理、可视化亲密度成长、五维认知画像、游戏化每日任务和团队排行榜。"
+
+# ClawHub 插件页文案（供发布参考）
+
+## 标题
+Anima — 让 AI Agent 拥有成长的灵魂
+
+## 副标题
+基于认知科学的 Agent 认知成长引擎 | 五层记忆架构 | 零侵入安装
+
+## 置顶欢迎语
+🌟 **Anima — 让 AI Agent 拥有成长的灵魂**
+
+一键安装：`clawhub install anima-aios`
+
+五层记忆架构 · 知识宫殿 · 零侵入 · 全自动
+
+让你的 Agent 从「每天重新活一次」变成「每天都在成长」
+
+⭐️ [GitHub](https://github.com/anima-aios/anima) | Apache 2.0
 use_when:
   - cognitive profile
   - intimacy
@@ -33,6 +52,46 @@ use_when:
 > **让成长可见，让认知可量** | Making Growth Visible, Making Cognition Measurable
 
 为你的 AI Agent 添加五层记忆架构、知识宫殿、认知成长和自动进化能力。
+
+---
+
+## 描述
+
+**你的 Agent 每天都在「重新活一次」。Anima 改变这一点。**
+
+Anima（拉丁语「灵魂」）为 OpenClaw Agent 提供五层记忆架构，模拟人类认知发展过程，让 Agent 能记住经历、沉淀知识、形成认知、持续成长。
+
+### 核心能力
+
+- 🧠 **五层记忆架构 L1→L5** — 工作记忆→情景→语义→知识宫殿→元认知
+- 🏛️ **知识宫殿** — 5 级空间结构 + LLM 智能分类，市面独有
+- 🔺 **金字塔知识组织** — 实例→规则→模式→本体，4 层自动提炼
+- 📉 **Ebbinghaus 记忆衰减** — 科学遗忘曲线 + 智能复习推荐
+- 👁️ **零侵入 Watchdog** — 无需修改 Agent 代码
+- 🧬 **五维认知画像** — 内化力 · 应用力 · 创造力 · 元认知 · 协作力
+- 🏥 **健康系统** — 5 大模块保障数据可靠性
+- 🔄 **v6.2 原生记忆导入** — 一键导入 OpenClaw 记忆，解决冷启动
+
+### 安装
+
+```bash
+clawhub install anima-aios
+pip install watchdog  # 可选：启用自动记忆监听
+```
+
+零配置，零侵入，安装即生效。
+
+> 💡 **提示**：支持 LLM 模式（智能分类/去重/质量评估），无 LLM 时自动降级为规则模式。
+
+### 未来蓝图
+
+**记忆 → 成长 → 进化 → 活着 → 永生**
+
+- **v6 系列（当前）** — 五层记忆 + 知识宫殿 + 亲密度 + 原生记忆导入
+- **v7 进化（规划中）** — Agent 自创技能，从执行者变创造者
+- **远期** — 活着 → 永生，认知永不消逝
+
+GitHub: https://github.com/anima-aios/anima | Apache 2.0
 
 ---
 
