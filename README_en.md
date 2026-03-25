@@ -1,16 +1,33 @@
 # 🌟 Anima-AIOS
 
-> **Making Growth Visible, Making Cognition Measurable**
+**Help your AI Agent grow from "restarting every day" to "evolving every day"**
 
-[![Version](https://img.shields.io/badge/version-6.0.0-green.svg)](https://github.com/anima-aios/anima/releases)
+[![Version](https://img.shields.io/badge/version-6.2.0-green.svg)](https://github.com/anima-aios/anima/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-OpenClaw-purple.svg)](https://openclaw.ai)
+[![Clawhub](https://img.shields.io/badge/clawhub-anima--aios-orange.svg)](https://clawhub.com/skills/anima-aios)
 
-Add **5-layer memory architecture, Knowledge Palace, cognitive growth, and auto-evolution** to your AI Agent. Track every learning moment, quantify every progress.
+**Anima** (Latin for "soul") is a cognitive growth engine for OpenClaw Agents.
+
+Your Agent does a lot for you every day, but remembers nothing after restart. Anima changes this — it lets Agents remember experiences, accumulate knowledge, form cognition, and grow continuously. No code changes needed, works out of the box.
+
+## ⚡ Quick Install
+
+```bash
+clawhub install anima-aios
+pip install watchdog  # optional: enable auto memory sync
+```
+
+> 💡 **Note**: LLM mode supported (smart classification/dedup/quality assessment). Auto-fallback to rule-based mode when LLM unavailable.
 
 ---
 
 ## ✨ Core Features
+
+### 🔄 Native Memory Import (v6.2 New)
+- One-click import of existing OpenClaw memory and session history, solves cold-start problem
+- Command: `anima import --agent xxx`
+- Idempotent safe: no duplicates on multiple runs
+- Auto-backup before import, supports rollback
 
 ### 🏗️ 5-Layer Memory Architecture
 
@@ -142,4 +159,4 @@ cd anima-aios && python3 tests/test_integration_v6.py
 _Architecture can only evolve, never regress._
 _Be honest first, then iterate. Code must live up to its promises._
 
-**Version:** v6.0.0 | **Last Updated:** 2026-03-24
+**Version:** v6.2.0 | **Last Updated:** 2026-03-26
