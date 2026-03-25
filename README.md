@@ -1,17 +1,33 @@
 # 🌟 Anima-AIOS
 
-> **让成长可见，让认知可量**
-> **Making Growth Visible, Making Cognition Measurable**
+**让 AI Agent 从「每天重新活一次」变成「每天都在成长」**
 
-[![Version](https://img.shields.io/badge/version-6.0.0-green.svg)](https://github.com/anima-aios/anima/releases)
+[![Version](https://img.shields.io/badge/version-6.2.0-green.svg)](https://github.com/anima-aios/anima/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-OpenClaw-purple.svg)](https://openclaw.ai)
+[![Clawhub](https://img.shields.io/badge/clawhub-anima--aios-orange.svg)](https://clawhub.com/skills/anima-aios)
 
-为 AI Agent 添加**五层记忆架构、知识宫殿、认知成长和自动进化能力**。追踪每一次学习，量化每一份进步。
+**Anima**（拉丁语「灵魂」）是一个基于 OpenClaw 的 Agent 认知成长引擎。
+
+你的 Agent 每天帮你做了很多事，但重启后什么都不记得。Anima 改变这一点——它让 Agent 能记住经历、沉淀知识、形成认知、持续成长。无需修改 Agent 代码，安装即生效。
+
+## ⚡ 一键安装
+
+```bash
+clawhub install anima-aios
+pip install watchdog  # 可选：启用自动记忆监听
+```
+
+> 💡 **提示**：支持 LLM 模式（智能分类/去重/质量评估），无 LLM 时自动降级为规则模式。
 
 ---
 
 ## ✨ 核心能力
+
+### 🔄 v6.2 原生记忆导入（新增）
+- 一键导入 OpenClaw 已有记忆和 session 历史，解决冷启动问题
+- 支持 `anima import --agent xxx` 命令
+- 幂等安全，多次运行不重复
+- 自动备份，支持回滚
 
 ### 🏗️ 五层记忆架构
 
