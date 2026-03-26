@@ -40,7 +40,7 @@ class ConfigLoader:
     
     # 默认配置
     DEFAULT_CONFIG = {
-        "version": "6.2.2",
+        "version": "6.2.3",
         "facts_base": "/home/画像",
         "normalization": {
             "mode": "auto",
