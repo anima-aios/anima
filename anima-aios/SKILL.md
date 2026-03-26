@@ -94,7 +94,7 @@ GitHub: https://github.com/anima-aios/anima | Apache 2.0
 
 ---
 
-## ✨ v6.2.1 New Features (Current Version)
+## ✨ v6.2.2 New Features (Current Version)
 
 ### 🔒 Security & Privacy Fixes
 - **Version Unification** - __init__.py updated from 6.1.2 to 6.2.1
