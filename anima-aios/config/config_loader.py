@@ -118,26 +118,32 @@ class ConfigLoader:
         """检测 Agent 名称
         
         优先级：
-        1. 环境变量 ANIMA_AGENT_NAME
-        2. OpenClaw 上下文（当前运行的 Agent）
+        1. 环境变量 ANIMA_AGENT_NAME（最高）
+        2. OpenClaw 上下文（OPENCLAW_WORKSPACE，兼容模式）
         3. 自动扫描 SOUL.md
         4. 兜底值 "unknown"
         """
-        # 1. 环境变量
+        # 1. 主要环境变量
         env_name = os.getenv("ANIMA_AGENT_NAME")
         if env_name:
             return env_name
         
-        # 2. OpenClaw 上下文
+        # 2. OpenClaw 上下文（兼容模式，deprecated 警告）
         workspace = os.getenv("OPENCLAW_WORKSPACE")
         if workspace:
-            # 从路径提取 Agent 名称，如 /root/.openclaw/workspace-qinghe → qinghe
+            import warnings
+            warnings.warn(
+                "OPENCLAW_WORKSPACE is deprecated, use ANIMA_AGENT_NAME instead",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            # 从路径提取 Agent 名称
             parts = workspace.split("/")
             for part in reversed(parts):
                 if part.startswith("workspace-"):
                     return part.replace("workspace-", "")
         
-        # 3. 扫描 SOUL.md
+        # 3. 自动扫描 SOUL.md
         soul_path = Path(workspace or "~/.openclaw/workspace").expanduser() / "SOUL.md"
         if soul_path.exists():
             try:
