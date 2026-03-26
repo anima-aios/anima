@@ -353,7 +353,48 @@ GitHub: https://github.com/anima-aios/anima | Apache 2.0
 
 ---
 
-## ✨ v6.2.2 新增功能（当前版本）
+## ✨ v6.2.3 新增功能（当前版本）
+
+### 🔒 文档透明度提升
+
+**多平台路径说明：**
+- Linux: `/home/画像`（多 Agent 共享）
+- macOS: `~/画像`
+- Windows: `~/画像`
+- 环境变量：`ANIMA_FACTS_BASE` 可覆盖
+
+**网络调用透明说明：**
+- LLM API 调用（可选，用户可控）
+- 支持本地部署（无网络）
+- 默认降级为规则模式
+
+**脚本用途说明：**
+- post-install.sh - 安装时复制 Core
+- refresh-quests.sh - 刷新每日任务
+- sync-memory.sh - 定时同步记忆
+- show-progress.sh - 显示认知进度
+- 全部本地操作，无网络调用
+
+**环境变量统一：**
+- 统一为 `ANIMA_*` 前缀
+- `OPENCLAW_WORKSPACE` 兼容（deprecated 警告）
+
+### 🔧 环境变量统一
+
+**变更前：**
+- `ANIMA_FACTS_BASE` ✅
+- `ANIMA_AGENT_NAME` ✅
+- `OPENCLAW_WORKSPACE` ⚠️
+- `WORKSPACE` ❌
+
+**变更后：**
+- `ANIMA_FACTS_BASE` ✅ 主要
+- `ANIMA_AGENT_NAME` ✅ 主要
+- `OPENCLAW_WORKSPACE` ⚠️ 兼容（deprecated 警告）
+
+---
+
+## ✨ v6.2.2 新增功能（上一版本）
 
 ### 🔧 per-Agent 配置覆盖
 
