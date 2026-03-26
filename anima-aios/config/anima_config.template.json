@@ -1,5 +1,6 @@
 {
-  "version": "6.2.1",
+  "_comment": "全局配置模板 - 所有 Agent 共享的默认配置",
+  "version": "6.2.2",
   "agent": "{AGENT_NAME}",
   
   "normalization": {

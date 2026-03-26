@@ -353,7 +353,61 @@ GitHub: https://github.com/anima-aios/anima | Apache 2.0
 
 ---
 
-## ✨ v6.2.1 新增功能（当前版本）
+## ✨ v6.2.2 新增功能（当前版本）
+
+### 🔧 per-Agent 配置覆盖
+
+**问题：** 多 Agent 场景下，全局配置无法满足个性化需求（如不同的 LLM 配置、五维权重）
+
+**解决方案：** 支持 per-Agent 配置覆盖
+
+**配置结构：**
+```
+~/.anima/config/
+├── config.json          # 全局默认配置（所有 Agent 共享）
+└── agents/
+    ├── Z.json           # Z 的覆盖配置（只写差异）
+    ├── 方秋.json        # 方秋的覆盖配置
+    └── ...
+```
+
+**配置合并逻辑：**
+```
+最终配置 = 代码默认值 + 全局配置 + Agent 覆盖配置
+```
+
+**示例：**
+
+全局配置 (`config.json`):
+```json
+{
+  "facts_base": "/home/画像",
+  "llm": { "provider": "current_agent" },
+  "weights": { "creation": 0.25 }
+}
+```
+
+Z 的覆盖配置 (`agents/Z.json`):
+```json
+{
+  "llm": { "provider": "bailian", "models": { "quality_assess": "qwen-max" } },
+  "weights": { "creation": 0.30 }
+}
+```
+
+**最终 Z 的配置** = 全局 + Z 覆盖（深度合并）
+
+**移除：** `"agent"` 字段（改为运行时自动检测）
+
+**优先级：**
+1. 环境变量（最高）
+2. Agent 覆盖配置
+3. 全局配置
+4. 代码默认值
+
+---
+
+## ✨ v6.2.1 新增功能（上一版本）
 
 ### 🔒 安全与隐私修复
 - **版本号统一** - __init__.py 从 6.1.2 更新为 6.2.1
@@ -486,14 +540,15 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
 
 ---
 
-## ⚙️ 配置
+## ⚙️ 配置 (v6.2.2)
 
-配置文件路径：`~/.anima/config/anima_config.json`
+### 配置结构
 
+**全局配置** (`~/.anima/config/config.json`):
 ```json
 {
+  "version": "6.2.2",
   "facts_base": "/home/画像",
-  "agent_name": "auto",
   "llm": {
     "provider": "current_agent",
     "models": {
@@ -516,15 +571,43 @@ Agent 日常工作（OpenClaw write/edit/memory_write）
 }
 ```
 
-**关键配置说明：**
+**Agent 覆盖配置** (`~/.anima/config/agents/{agent_name}.json`):
+```json
+{
+  "_comment": "只写与全局配置的差异",
+  "llm": {
+    "provider": "bailian",
+    "models": {
+      "quality_assess": "qwen-max"
+    }
+  },
+  "weights": {
+    "creation": 0.30
+  }
+}
+```
+
+### 配置优先级
+
+| 优先级 | 来源 | 说明 |
+|--------|------|------|
+| 1 | 环境变量 | `ANIMA_FACTS_BASE`, `ANIMA_TEAM_MODE` 等 |
+| 2 | Agent 覆盖配置 | `~/.anima/config/agents/{agent_name}.json` |
+| 3 | 全局配置 | `~/.anima/config/config.json` |
+| 4 | 代码默认值 | `config_loader.py` 中的 DEFAULT_CONFIG |
+
+### 关键配置说明
 
 | 配置项 | 说明 | 默认值 | 建议 |
 |--------|------|--------|------|
 | `team_mode` | 是否扫描其他 Agent 数据生成团队排行 | `false` | 多 Agent 环境保持关闭 |
 | `facts_base` | 事实数据存储路径 | `/home/画像` | 可自定义到私有目录 |
-| `agent_name` | Agent 名称 | 自动检测 | 一般无需修改 |
+| `llm.provider` | LLM 提供商 | `current_agent` | 可用 `bailian`, `openai` 等 |
+| `pyramid.auto_distill` | 是否启用金字塔自动提炼 | `false` | 数据量大时可启用 |
 
 > 🔐 **隐私提示**：`team_mode: false` 时，Anima 仅处理当前 Agent 的数据，不会访问其他 Agent 文件。
+
+> 💡 **提示**：Agent 名称自动检测（环境变量 → OpenClaw 上下文 → SOUL.md → 兜底），无需手动配置。
 
 ---
 

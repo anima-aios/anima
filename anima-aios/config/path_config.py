@@ -15,12 +15,14 @@
 # limitations under the License.
 
 r"""
-Anima-AIOS - 路径配置
+Anima-AIOS - 路径配置 (v6.2.2)
 
 支持不同操作系统和环境的路径配置：
 - Linux 服务器：/home/画像
 - macOS: /Users/用户名/画像
 - Windows: C:/Users/用户名/画像
+
+v6.2.2 新增：支持 per-Agent 配置覆盖
 
 使用方法：
     from config.path_config import Config
@@ -67,8 +69,9 @@ class Config:
         优先级：
         1. 构造函数传入的 facts_base
         2. 环境变量 ANIMA_FACTS_BASE
-        3. ~/.anima/config/anima_config.json 中的 facts_base
-        4. 系统自动检测（Linux: /home/画像, macOS: ~/画像, Windows: ~/画像）
+        3. 新配置加载器（支持 per-Agent 覆盖，v6.2.2+）
+        4. 旧配置文件 ~/.anima/config/anima_config.json 中的 facts_base（向后兼容）
+        5. 系统自动检测（Linux: /home/画像，macOS: ~/画像，Windows: ~/画像）
         """
         if self._facts_base:
             return Path(self._facts_base)
@@ -78,7 +81,16 @@ class Config:
         if env_base:
             return Path(env_base)
         
-        # 读取配置文件
+        # 新配置加载器（v6.2.2+）
+        try:
+            from config.config_loader import get_config
+            config = get_config()
+            if config.get("facts_base"):
+                return Path(config["facts_base"])
+        except Exception:
+            pass
+        
+        # 向后兼容：旧配置文件
         config_file = Path(os.path.expanduser("~/.anima/config/anima_config.json"))
         if config_file.exists():
             try:
