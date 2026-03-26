@@ -361,6 +361,58 @@ tags: [auto-sync, openclaw-memory]
         """最后一次知识写入的时间戳（供宫殿分类调度器使用）"""
         return self._last_write_time
     
+    def scan_learnings(self) -> None:
+        """扫描 .learnings/ 目录（self-improving-agent 兼容）
+        
+        静默检测，如果用户安装了 self-improving-agent，
+        自动提取高价值学习记录到事实库。
+        """
+        learnings_dir = self.watch_dir.parent / ".learnings"
+        
+        # 静默检测，无提示
+        if not learnings_dir.exists():
+            return  # 用户没装，直接跳过
+        
+        learnings_file = learnings_dir / "LEARNINGS.md"
+        if not learnings_file.exists():
+            return
+        
+        # 解析并提取高价值记录
+        self._process_learnings(learnings_file)
+    
+    def _process_learnings(self, learnings_file: Path) -> None:
+        """处理学习记录文件
+        
+        提取 Priority: high 或 Recurrence-Count >= 3 的记录
+        到事实库，并奖励 EXP（学习行为）。
+        """
+        try:
+            content = learnings_file.read_text(encoding='utf-8')
+            
+            # 简化处理：检测文件变化后同步到 L2
+            file_hash = hashlib.md5(content.encode()).hexdigest()
+            old_hash = self._file_hashes.get(str(learnings_file), "")
+            
+            if file_hash == old_hash:
+                return  # 文件没变
+            
+            # 提取内容到 L2 情景记忆
+            self._sync_to_l2(
+                f"[LEARNINGS] {learnings_file.name}",
+                str(learnings_file)
+            )
+            
+            # 奖励 EXP（学习行为）
+            self._update_exp("[LEARNINGS] 记录学习经验")
+            
+            # 更新哈希
+            self._file_hashes[str(learnings_file)] = file_hash
+            
+            logger.info(f"[learnings] 处理完成：{learnings_file}")
+            
+        except Exception as e:
+            logger.error(f"[learnings] 处理失败：{e}")
+    
     def get_status(self) -> Dict:
         """获取 watcher 运行状态"""
         return {
