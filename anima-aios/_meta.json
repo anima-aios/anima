@@ -28,7 +28,7 @@
   "config": {
     "team_mode": {
       "description": "是否启用团队排行（扫描其他 Agent 数据）",
-      "default": true,
+      "default": false,
       "type": "boolean"
     },
     "auto_import": {
